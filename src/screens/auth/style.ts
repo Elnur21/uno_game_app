@@ -20,4 +20,15 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 4,
   },
+  googleButton: {
+    marginTop: 16,
+    backgroundColor: '#4285F4',
+    padding: 10,
+    borderRadius: 5,
+  },
+  googleButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
 });

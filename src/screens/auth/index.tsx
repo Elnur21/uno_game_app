@@ -1,14 +1,19 @@
-import React, {useState} from 'react';
-import {View, Text, TextInput, Button, Alert} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
-import {styles} from './style';
-import {AuthScreenNavigationProp} from '../../types/navigationProps';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { styles } from './style';
+import { AuthScreenNavigationProp } from '../../types/navigationProps';
+
+GoogleSignin.configure({
+  webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', // Replace with your webClientId
+});
 
 interface AuthNavigationProp {
   navigation: AuthScreenNavigationProp;
 }
 
-const AuthScreen = ({navigation}: AuthNavigationProp) => {
+const AuthScreen = ({ navigation }: AuthNavigationProp) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,6 +34,19 @@ const AuthScreen = ({navigation}: AuthNavigationProp) => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const { idToken } = await GoogleSignin.signIn();
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+      await auth().signInWithCredential(googleCredential);
+      Alert.alert('Google Sign-In successful');
+      navigation.navigate('MainMenu');
+    } catch (error) {
+      Alert.alert('Something went wrong with Google Sign-In. Please try again.');
     }
   };
 
@@ -55,6 +73,9 @@ const AuthScreen = ({navigation}: AuthNavigationProp) => {
         onPress={handleLogin}
         disabled={loading}
       />
+      <TouchableOpacity onPress={handleGoogleSignIn} style={styles.googleButton}>
+        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+      </TouchableOpacity>
     </View>
   );
 };
