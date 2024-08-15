@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "966031639952",
+    "project_id": "uno-turnir",
+    "storage_bucket": "uno-turnir.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:966031639952:android:89202a2869e69f85c7df15",
+        "android_client_info": {
+          "package_name": "com.uno_turnir"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2WoSHN8UTqn4WFLP4JRrCVkVt2d-W-Cw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

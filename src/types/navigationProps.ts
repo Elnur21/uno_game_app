@@ -5,11 +5,19 @@ export type MainMenuNavigationProp = StackNavigationProp<
   RootStackParamList,
   'MainMenu'
 >;
-export type GameScreenNavigationProp = StackNavigationProp<
+export type OfflineGameScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  'GameScreen'
+  'OfflineGameScreen'
+>;
+export type OnlineGameScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'OnlineGameScreen'
 >;
 export type WonScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'WonScreen'
+>;
+export type AuthScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'AuthScreen'
 >;

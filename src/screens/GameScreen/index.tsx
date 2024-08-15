@@ -1,12 +1,12 @@
 import { CardsProvider } from '../../Contexts/CardsContext';
 import { Table } from '../../Components/Table';
-import { GameScreenNavigationProp } from '../../types/navigationProps';
+import { OfflineGameScreenNavigationProp } from '../../types/navigationProps';
 
 interface GameScreenProps {
-  navigation: GameScreenNavigationProp;
+  navigation: OfflineGameScreenNavigationProp;
 }
 
-export function GameScreen({ navigation }: GameScreenProps) {
+export function OfflineGameScreen({ navigation }: GameScreenProps) {
   return (
     <CardsProvider>
       <Table navigation={navigation} />

@@ -1,5 +1,7 @@
 export type RootStackParamList = {
-    MainMenu: undefined;
-    GameScreen: undefined;
-    WonScreen: { winner: string };
+  MainMenu: undefined;
+  OfflineGameScreen: undefined;
+  OnlineGameScreen: undefined;
+  AuthScreen: undefined;
+  WonScreen: {winner: string};
 };
