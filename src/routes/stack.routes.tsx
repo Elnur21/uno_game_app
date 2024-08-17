@@ -9,6 +9,8 @@ import SignUpScreen from '../screens/auth/signup';
 import {getData} from '../storage/local';
 import SignOutButton from '../Components/buttons/SignOutButton';
 import {useUserContext} from '../Contexts/UserContext';
+import { UsersScreen } from '../screens/UsersScreen';
+import { Button } from 'react-native';
 
 const {Navigator, Screen} = createStackNavigator();
 
@@ -31,6 +33,14 @@ export default function Stack() {
         title: user && user?.firstName + ' ' + user?.lastName,
         headerShown: isSigned ? true : false,
         headerLeft: () => null,
+        headerStyle: {
+          backgroundColor: 'black',
+          borderBottomWidth: 1,
+          borderBottomColor: 'white',
+        },
+        headerTitleStyle: {
+          color: 'white',
+        },
       }}>
       <Screen name="MainMenu" component={MainMenu} />
       <Screen name="OfflineGameScreen" component={OfflineGameScreen} />
@@ -38,6 +48,15 @@ export default function Stack() {
       <Screen name="WonScreen" component={WonScreen} />
       <Screen name="AuthScreen" component={AuthScreen} />
       <Screen name="SignUpScreen" component={SignUpScreen} />
+      <Screen options={({ navigation }) => ({
+          headerLeft: () => (
+            <Button
+              onPress={() => navigation.goBack()}
+              title="Back"
+              color="#fff"
+            />
+          ),
+        })} name="UsersScreen" component={UsersScreen} />
     </Navigator>
   );
 }

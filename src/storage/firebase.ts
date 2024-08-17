@@ -1,4 +1,5 @@
 import firestore from '@react-native-firebase/firestore';
+import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
 import {removeData} from './local';
 
@@ -29,4 +30,14 @@ export const logOut = () => {
       console.log('User signed out!');
     })
     .catch(error => console.error(error));
+};
+
+export const getAllData = async (collection: string) => {
+  try {
+    const snapshot = await firestore().collection(collection).get();
+    const dataList = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+    return dataList;
+  } catch (err) {
+    console.log(err);
+  }
 };

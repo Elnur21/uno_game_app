@@ -21,3 +21,7 @@ export type AuthScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'AuthScreen'
 >;
+export type UsersScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'UsersScreen'
+>;
