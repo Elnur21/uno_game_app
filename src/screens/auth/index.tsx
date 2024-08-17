@@ -15,6 +15,7 @@ import {AuthScreenNavigationProp} from '../../types/navigationProps';
 import {config} from '../../../config';
 import {getUserByEmail} from '../../storage/firebase';
 import {setData} from '../../storage/local';
+import {useUserContext} from '../../Contexts/UserContext';
 
 interface AuthNavigationProp {
   navigation: AuthScreenNavigationProp;
@@ -30,15 +31,21 @@ const AuthScreen = ({navigation}: AuthNavigationProp) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const {setIsSigned, setUser} = useUserContext();
 
   const handleLogin = async () => {
     setLoading(true);
     try {
       await auth().signInWithEmailAndPassword(email, password);
-      getUserByEmail(email).then(user => setData('user', user));
-      Alert.alert('Login successful');
-      navigation.navigate('MainMenu');
-      DevSettings.reload();
+      getUserByEmail(email).then((user: any) => {
+        setUser(user);
+        setData('user', user);
+        Alert.alert('Login successful');
+        navigation.navigate('MainMenu');
+      });
+
+      // DevSettings.reload();
+      setIsSigned(true);
     } catch (error: any) {
       if (error?.code === 'auth/user-not-found') {
         Alert.alert('No user found with this email.');

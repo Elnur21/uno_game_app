@@ -1,9 +1,11 @@
 import {Alert, Pressable, Text, DevSettings} from 'react-native';
 import {logOut} from '../../storage/firebase';
 import {useNavigation} from '@react-navigation/native';
+import {useUserContext} from '../../Contexts/UserContext';
 
 export default function SignOutButton() {
   const navigation = useNavigation();
+  const {setIsSigned} = useUserContext();
 
   const handleSignOut = () => {
     Alert.alert(
@@ -19,7 +21,8 @@ export default function SignOutButton() {
           onPress: () => {
             logOut();
             navigation.navigate('AuthScreen');
-            DevSettings.reload();
+            // DevSettings.reload();
+            setIsSigned(false);
           },
         },
       ],

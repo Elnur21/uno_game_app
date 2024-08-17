@@ -8,13 +8,20 @@ import AuthScreen from '../screens/auth';
 import SignUpScreen from '../screens/auth/signup';
 import {getData} from '../storage/local';
 import SignOutButton from '../Components/buttons/SignOutButton';
+import {useUserContext} from '../Contexts/UserContext';
 
 const {Navigator, Screen} = createStackNavigator();
 
 export default function Stack() {
-  const user = getData('user', true);
+  const userLocal = getData('user', true);
 
-  console.log(user);
+  const {isSigned, user: userContext, setIsSigned} = useUserContext();
+
+  const user = userLocal ? userLocal : userContext;
+
+  useEffect(() => {
+    if (user) setIsSigned(true);
+  }, []);
 
   return (
     <Navigator
@@ -22,7 +29,8 @@ export default function Stack() {
       screenOptions={{
         headerRight: () => user && <SignOutButton />,
         title: user && user?.firstName + ' ' + user?.lastName,
-        headerShown: user ? true : false,
+        headerShown: isSigned ? true : false,
+        headerLeft: () => null,
       }}>
       <Screen name="MainMenu" component={MainMenu} />
       <Screen name="OfflineGameScreen" component={OfflineGameScreen} />

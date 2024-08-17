@@ -1,12 +1,15 @@
 import {NavigationContainer} from '@react-navigation/native';
 import React from 'react';
 import Stack from './src/routes/stack.routes';
+import {UserProvider} from './src/Contexts/UserContext';
 
 function App(): React.JSX.Element {
   return (
-    <NavigationContainer>
-      <Stack />
-    </NavigationContainer>
+    <UserProvider>
+      <NavigationContainer>
+        <Stack />
+      </NavigationContainer>
+    </UserProvider>
   );
 }
 
