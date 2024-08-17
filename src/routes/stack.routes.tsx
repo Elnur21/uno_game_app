@@ -9,8 +9,9 @@ import SignUpScreen from '../screens/auth/signup';
 import {getData} from '../storage/local';
 import SignOutButton from '../Components/buttons/SignOutButton';
 import {useUserContext} from '../Contexts/UserContext';
-import { UsersScreen } from '../screens/UsersScreen';
-import { Button } from 'react-native';
+import {UsersScreen} from '../screens/UsersScreen';
+import {Button} from 'react-native';
+import ChatroomScreen from '../screens/chatScreen';
 
 const {Navigator, Screen} = createStackNavigator();
 
@@ -48,7 +49,8 @@ export default function Stack() {
       <Screen name="WonScreen" component={WonScreen} />
       <Screen name="AuthScreen" component={AuthScreen} />
       <Screen name="SignUpScreen" component={SignUpScreen} />
-      <Screen options={({ navigation }) => ({
+      <Screen
+        options={({navigation}) => ({
           headerLeft: () => (
             <Button
               onPress={() => navigation.goBack()}
@@ -56,7 +58,23 @@ export default function Stack() {
               color="#fff"
             />
           ),
-        })} name="UsersScreen" component={UsersScreen} />
+        })}
+        name="UsersScreen"
+        component={UsersScreen}
+      />
+      <Screen
+        options={({navigation}) => ({
+          headerLeft: () => (
+            <Button
+              onPress={() => navigation.goBack()}
+              title="Back"
+              color="#fff"
+            />
+          ),
+        })}
+        name="ChatroomScreen"
+        component={ChatroomScreen}
+      />
     </Navigator>
   );
 }

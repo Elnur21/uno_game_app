@@ -6,6 +6,7 @@ export type RootStackParamList = {
   SignUpScreen: undefined;
   UsersScreen: undefined;
   WonScreen: {winner: string};
+  ChatroomScreen: {user: User};
 };
 
 export type User = {
@@ -16,3 +17,10 @@ export type User = {
   lastName: string;
   password: string;
 };
+
+export interface Message {
+  id: string;
+  text: string;
+  createdAt: any;
+  userId: string;
+}
