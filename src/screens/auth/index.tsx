@@ -1,19 +1,32 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  TouchableOpacity,
+  DevSettings,
+} from 'react-native';
 import auth from '@react-native-firebase/auth';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { styles } from './style';
-import { AuthScreenNavigationProp } from '../../types/navigationProps';
-
-GoogleSignin.configure({
-  webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', // Replace with your webClientId
-});
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {styles} from './style';
+import {AuthScreenNavigationProp} from '../../types/navigationProps';
+import {config} from '../../../config';
+import {getUserByEmail} from '../../storage/firebase';
+import {setData} from '../../storage/local';
 
 interface AuthNavigationProp {
   navigation: AuthScreenNavigationProp;
 }
 
-const AuthScreen = ({ navigation }: AuthNavigationProp) => {
+const AuthScreen = ({navigation}: AuthNavigationProp) => {
+  GoogleSignin.configure({
+    webClientId: config.webClientId,
+    offlineAccess: false,
+    forceCodeForRefreshToken: true,
+  });
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,8 +35,10 @@ const AuthScreen = ({ navigation }: AuthNavigationProp) => {
     setLoading(true);
     try {
       await auth().signInWithEmailAndPassword(email, password);
+      getUserByEmail(email).then(user => setData('user', user));
       Alert.alert('Login successful');
       navigation.navigate('MainMenu');
+      DevSettings.reload();
     } catch (error: any) {
       if (error?.code === 'auth/user-not-found') {
         Alert.alert('No user found with this email.');
@@ -34,19 +49,6 @@ const AuthScreen = ({ navigation }: AuthNavigationProp) => {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const { idToken } = await GoogleSignin.signIn();
-      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-      await auth().signInWithCredential(googleCredential);
-      Alert.alert('Google Sign-In successful');
-      navigation.navigate('MainMenu');
-    } catch (error) {
-      Alert.alert('Something went wrong with Google Sign-In. Please try again.');
     }
   };
 
@@ -73,8 +75,12 @@ const AuthScreen = ({ navigation }: AuthNavigationProp) => {
         onPress={handleLogin}
         disabled={loading}
       />
-      <TouchableOpacity onPress={handleGoogleSignIn} style={styles.googleButton}>
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+      <View style={styles.separator} />
+      <Text style={styles.title}>Don't have an account?</Text>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('SignUpScreen')}
+        style={styles.signUpButton}>
+        <Text style={styles.signUpButtonText}>Sign Up</Text>
       </TouchableOpacity>
     </View>
   );
