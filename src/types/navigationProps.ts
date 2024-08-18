@@ -25,6 +25,14 @@ export type UsersScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'UsersScreen'
 >;
+export type TurnirsScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'TurnirsScreen'
+>;
+export type CreateTurnirScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'CreateTurnirScreen'
+>;
 export type ChatroomScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'ChatroomScreen'

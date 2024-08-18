@@ -43,8 +43,6 @@ const AuthScreen = ({navigation}: AuthNavigationProp) => {
         Alert.alert('Login successful');
         navigation.navigate('MainMenu');
       });
-
-      // DevSettings.reload();
       setIsSigned(true);
     } catch (error: any) {
       if (error?.code === 'auth/user-not-found') {

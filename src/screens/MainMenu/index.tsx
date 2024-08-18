@@ -10,7 +10,7 @@ interface MainMenuProps {
 
 export function MainMenu({navigation}: MainMenuProps) {
   function startOnlineGame() {
-    navigation.navigate('UsersScreen');
+    navigation.navigate('TurnirsScreen');
   }
   function startOfflineGame() {
     navigation.navigate('OfflineGameScreen');

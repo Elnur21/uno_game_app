@@ -5,6 +5,8 @@ export type RootStackParamList = {
   AuthScreen: undefined;
   SignUpScreen: undefined;
   UsersScreen: undefined;
+  TurnirsScreen: undefined;
+  CreateTurnirScreen: undefined;
   WonScreen: {winner: string};
   ChatroomScreen: {user: User};
 };
@@ -16,6 +18,7 @@ export type User = {
   firstName: string;
   lastName: string;
   password: string;
+  role: 'member' | 'admin';
 };
 
 export interface Message {
@@ -23,4 +26,13 @@ export interface Message {
   text: string;
   createdAt: any;
   userId: string;
+}
+
+export interface Turnir {
+  id: string;
+  title: string;
+  creator: string;
+  createdAt: any;
+  startDate: any;
+  users: any;
 }

@@ -9,7 +9,7 @@ interface Props {
 export const User = createContext<UserContextType | any>(undefined);
 
 export const UserProvider = ({children}: Props) => {
-  const [isSigned, setIsSigned] = useState<boolean>(true);
+  const [isSigned, setIsSigned] = useState<boolean>(false);
   const [user, setUser] = useState<UserProps>();
 
   const contextValue = {

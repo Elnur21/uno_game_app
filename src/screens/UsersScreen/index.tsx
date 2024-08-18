@@ -24,8 +24,8 @@ export function UsersScreen({navigation}: UsersScreenProps) {
   }
   return (
     <View style={{flex: 1}}>
-      <Text style={{fontSize: 24, padding: 16}}>My List</Text>
-      <ListView data={users} />
+      <Text style={{fontSize: 24, padding: 16}}>Users</Text>
+      <ListView data={users} type="user" />
     </View>
   );
 }

@@ -30,6 +30,7 @@ const SignUpScreen = ({navigation}: AuthNavigationProp) => {
     lastName: '',
     email: '',
     password: '',
+    role: 'member',
   });
   const [loading, setLoading] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -51,6 +52,7 @@ const SignUpScreen = ({navigation}: AuthNavigationProp) => {
         email: user?.email,
         firstName: user?.firstName,
         lastName: user?.lastName,
+        role: 'member',
       });
       Alert.alert('Registration successful');
       navigation.navigate('AuthScreen');
@@ -100,7 +102,6 @@ const SignUpScreen = ({navigation}: AuthNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="First name"
-        keyboardType="email-address"
         value={user.firstName}
         onChangeText={text => setUser({...user, firstName: text})}
         autoCapitalize="none"
@@ -108,7 +109,6 @@ const SignUpScreen = ({navigation}: AuthNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="Last name"
-        keyboardType="email-address"
         value={user.lastName}
         onChangeText={text => setUser({...user, lastName: text})}
         autoCapitalize="none"

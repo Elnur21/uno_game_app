@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { View, TextInput, Button, FlatList, Text } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, TextInput, Button, FlatList, Text} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { styles } from './style';
-import { Message } from '../../types/types';
+import {styles} from './style';
+import {Message} from '../../types/types';
 
-const ChatroomScreen = ({ route }) => {
-  const { user } = route.params; // The other user in the chat
+const ChatroomScreen = ({route}: any) => {
+  const {user} = route.params; 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
 
-  const currentUser = auth().currentUser;
+  const currentUser: any = auth().currentUser;
 
   useEffect(() => {
     const unsubscribe = firestore()
@@ -36,32 +36,31 @@ const ChatroomScreen = ({ route }) => {
   }, []);
 
   const getChatId = (userId1: string, userId2: string) => {
-    return userId1 > userId2 ? `${userId1}-${userId2}` : `${userId2}-${userId1}`;
+    return userId1 > userId2
+      ? `${userId1}-${userId2}`
+      : `${userId2}-${userId1}`;
   };
 
   const sendMessage = () => {
     if (input.trim()) {
       const chatId = getChatId(currentUser?.uid, user.id);
-      firestore()
-        .collection('chats')
-        .doc(chatId)
-        .collection('messages')
-        .add({
-          text: input,
-          createdAt: firestore.FieldValue.serverTimestamp(),
-          userId: currentUser?.uid,
-        });
+      firestore().collection('chats').doc(chatId).collection('messages').add({
+        text: input,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+        userId: currentUser?.uid,
+      });
       setInput('');
     }
   };
 
-  const renderItem = ({ item }: { item: Message }) => (
+  const renderItem = ({item}: {item: Message}) => (
     <View
       style={[
         styles.messageContainer,
-        item.userId === currentUser?.uid ? styles.myMessage : styles.theirMessage,
-      ]}
-    >
+        item.userId === currentUser?.uid
+          ? styles.myMessage
+          : styles.theirMessage,
+      ]}>
       <Text style={styles.messageText}>{item.text}</Text>
     </View>
   );
@@ -87,7 +86,5 @@ const ChatroomScreen = ({ route }) => {
     </View>
   );
 };
-
-
 
 export default ChatroomScreen;

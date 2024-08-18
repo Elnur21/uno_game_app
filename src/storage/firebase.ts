@@ -41,3 +41,23 @@ export const getAllData = async (collection: string) => {
     console.log(err);
   }
 };
+
+export const createData = async (collection: string, data: any) => {
+  console.log(data);
+
+  try {
+    await firestore().collection(collection).add(data);
+    console.log(`${collection} data added!`);
+  } catch (error) {
+    console.error(`Error adding ${collection}: `, error);
+  }
+};
+
+export const joinTurnir = async (turnirId: string, email: string) => {
+  return await firestore()
+    .collection('turnirs')
+    .doc(turnirId)
+    .update({
+      users: firestore.FieldValue.arrayUnion(email),
+    });
+};

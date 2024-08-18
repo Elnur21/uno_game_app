@@ -20,8 +20,8 @@ export default function SignOutButton() {
           text: 'Sign Out',
           onPress: () => {
             logOut();
+            // @ts-ignore
             navigation.navigate('AuthScreen');
-            // DevSettings.reload();
             setIsSigned(false);
           },
         },

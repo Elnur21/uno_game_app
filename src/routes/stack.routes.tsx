@@ -12,6 +12,8 @@ import {useUserContext} from '../Contexts/UserContext';
 import {UsersScreen} from '../screens/UsersScreen';
 import {Button} from 'react-native';
 import ChatroomScreen from '../screens/chatScreen';
+import {TurnirsScreen} from '../screens/TurnirsScreen';
+import CreateTurnirScreen from '../screens/TurnirsScreen/CreateTurnirScreen';
 
 const {Navigator, Screen} = createStackNavigator();
 
@@ -49,6 +51,7 @@ export default function Stack() {
       <Screen name="WonScreen" component={WonScreen} />
       <Screen name="AuthScreen" component={AuthScreen} />
       <Screen name="SignUpScreen" component={SignUpScreen} />
+      <Screen name="CreateTurnirScreen" component={CreateTurnirScreen} />
       <Screen
         options={({navigation}) => ({
           headerLeft: () => (
@@ -61,6 +64,19 @@ export default function Stack() {
         })}
         name="UsersScreen"
         component={UsersScreen}
+      />
+      <Screen
+        options={({navigation}) => ({
+          headerLeft: () => (
+            <Button
+              onPress={() => navigation.goBack()}
+              title="Back"
+              color="#fff"
+            />
+          ),
+        })}
+        name="TurnirsScreen"
+        component={TurnirsScreen}
       />
       <Screen
         options={({navigation}) => ({
