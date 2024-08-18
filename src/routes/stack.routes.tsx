@@ -10,10 +10,11 @@ import {getData} from '../storage/local';
 import SignOutButton from '../Components/buttons/SignOutButton';
 import {useUserContext} from '../Contexts/UserContext';
 import {UsersScreen} from '../screens/UsersScreen';
-import {Button} from 'react-native';
+import {Button, Pressable} from 'react-native';
 import ChatroomScreen from '../screens/chatScreen';
 import {TurnirsScreen} from '../screens/TurnirsScreen';
 import CreateTurnirScreen from '../screens/TurnirsScreen/CreateTurnirScreen';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const {Navigator, Screen} = createStackNavigator();
 
@@ -55,11 +56,9 @@ export default function Stack() {
       <Screen
         options={({navigation}) => ({
           headerLeft: () => (
-            <Button
-              onPress={() => navigation.goBack()}
-              title="Back"
-              color="#fff"
-            />
+            <Pressable onPress={() => navigation.goBack()}>
+              <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+            </Pressable>
           ),
         })}
         name="UsersScreen"
@@ -68,11 +67,9 @@ export default function Stack() {
       <Screen
         options={({navigation}) => ({
           headerLeft: () => (
-            <Button
-              onPress={() => navigation.goBack()}
-              title="Back"
-              color="#fff"
-            />
+            <Pressable onPress={() => navigation.goBack()}>
+              <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+            </Pressable>
           ),
         })}
         name="TurnirsScreen"
@@ -81,11 +78,9 @@ export default function Stack() {
       <Screen
         options={({navigation}) => ({
           headerLeft: () => (
-            <Button
-              onPress={() => navigation.goBack()}
-              title="Back"
-              color="#fff"
-            />
+            <Pressable onPress={() => navigation.goBack()}>
+              <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+            </Pressable>
           ),
         })}
         name="ChatroomScreen"

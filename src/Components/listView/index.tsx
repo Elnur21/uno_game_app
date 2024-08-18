@@ -23,11 +23,12 @@ interface ListViewProps {
 const ListView: React.FC<ListViewProps> = ({data, type}) => {
   const navigation = useNavigation();
   const handlePress = (item: any) => {
+    let route = type == 'turnir' ? 'UsersScreen' : 'ChatroomScreen';
     // @ts-ignore
-    navigation.navigate('ChatroomScreen', {item});
+    navigation.navigate(route, {item, type});
   };
   function handleJoin(turnirId: string): void {
-    const user = getData('user');
+    const user = getData('user', true);
     joinTurnir(turnirId, user.email).then(_ =>
       Alert.alert('Joined successfully'),
     );

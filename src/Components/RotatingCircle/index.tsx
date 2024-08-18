@@ -24,7 +24,7 @@ export function RotatingCircle() {
   return (
     <Animated.View style={{transform: [{rotate}]}}>
       <FontAwesome
-        name="arrows-rotate"
+        name="rotate-right"
         size={40}
         color="white"
       />
