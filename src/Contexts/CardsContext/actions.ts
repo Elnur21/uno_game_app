@@ -353,6 +353,93 @@ export function shuffleDrawDeck(
     setPlayerTurn(true);
 }
 
+export function shuffleDrawDeckForOnline() {
+    isEnemyPlaying = false;
+    isPlayerChoosing = false;
+    toBuy = 0;
+
+    const allCards = JSON.parse(JSON.stringify(cards));
+    const drawDeck: Card[] = [];
+    const player1Deck: Card[] = [];
+    const player2Deck: Card[] = [];
+    const tableDeck: Card[] = [];
+
+    // Shuffle all cards
+    for (let i = 0; i < 68; i++) {
+        const randomNum = Math.floor(Math.random() * allCards.length);
+        drawDeck.push(allCards[randomNum]);
+        allCards.splice(randomNum, 1);
+    }
+
+    // Deal 7 cards to each player
+    for (let i = 0; i < 7; i++) {
+        const randomNum1 = Math.floor(Math.random() * drawDeck.length);
+        player1Deck.push(drawDeck[randomNum1]);
+        drawDeck.splice(randomNum1, 1);
+
+        const randomNum2 = Math.floor(Math.random() * drawDeck.length);
+        player2Deck.push(drawDeck[randomNum2]);
+        drawDeck.splice(randomNum2, 1);
+    }
+
+    // Place first card on table
+    if (drawDeck.length > 0) {
+        const randomNum = Math.floor(Math.random() * drawDeck.length);
+        tableDeck.push(drawDeck[randomNum]);
+        drawDeck.splice(randomNum, 1);
+    }
+
+    return {
+        drawDeck,
+        player1Deck,
+        player2Deck,
+        tableDeck,
+    };
+}
+
+export function shuffleDrawDeckForMultiplayer(playerIds: string[]) {
+    isEnemyPlaying = false;
+    isPlayerChoosing = false;
+    toBuy = 0;
+
+    const allCards = JSON.parse(JSON.stringify(cards));
+    const drawDeck: Card[] = [];
+    const playerDecks: {[playerId: string]: Card[]} = {};
+    const tableDeck: Card[] = [];
+
+    playerIds.forEach(playerId => {
+        playerDecks[playerId] = [];
+    });
+
+    for (let i = 0; i < 68; i++) {
+        const randomNum = Math.floor(Math.random() * allCards.length);
+        drawDeck.push(allCards[randomNum]);
+        allCards.splice(randomNum, 1);
+    }
+
+    for (let cardIndex = 0; cardIndex < 7; cardIndex++) {
+        playerIds.forEach(playerId => {
+            if (drawDeck.length > 0) {
+                const randomNum = Math.floor(Math.random() * drawDeck.length);
+                playerDecks[playerId].push(drawDeck[randomNum]);
+                drawDeck.splice(randomNum, 1);
+            }
+        });
+    }
+
+    if (drawDeck.length > 0) {
+        const randomNum = Math.floor(Math.random() * drawDeck.length);
+        tableDeck.push(drawDeck[randomNum]);
+        drawDeck.splice(randomNum, 1);
+    }
+
+    return {
+        drawDeck,
+        playerDecks,
+        tableDeck,
+    };
+}
+
 export function givePlayerCards(updatedDrawDeck: Card[], setDrawDeck: SetDeck, setPlayerDeck: SetDeck, setEnemyDeck: SetDeck) {
     let updatedPlayerDeck: Card[] = [];
 

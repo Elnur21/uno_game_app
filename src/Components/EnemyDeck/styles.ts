@@ -15,5 +15,28 @@ export const styles = StyleSheet.create({
         flexWrap: 'wrap',
         gap: 8,
         overflow: 'hidden'
+    },
+    multiPlayerContainer: {
+        width: '100%',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 10,
+        padding: 5,
+    },
+    playerSection: {
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    playerName: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '500',
+        marginBottom: 5,
+    },
+    moreCardsText: {
+        color: '#fff',
+        fontSize: 10,
+        marginLeft: 5,
     }
 });

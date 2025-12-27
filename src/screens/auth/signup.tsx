@@ -12,8 +12,8 @@ import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {styles} from './style';
 import {AuthScreenNavigationProp} from '../../types/navigationProps';
 import firestore from '@react-native-firebase/firestore';
-import {config} from '../../../config';
 import {User} from '../../types/types';
+import { config } from '../../../config';
 
 interface AuthNavigationProp {
   navigation: AuthScreenNavigationProp;
@@ -94,6 +94,7 @@ const SignUpScreen = ({navigation}: AuthNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#888"
         keyboardType="email-address"
         value={user.email}
         onChangeText={text => setUser({...user, email: text})}
@@ -102,6 +103,7 @@ const SignUpScreen = ({navigation}: AuthNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="First name"
+        placeholderTextColor="#888"
         value={user.firstName}
         onChangeText={text => setUser({...user, firstName: text})}
         autoCapitalize="none"
@@ -109,6 +111,7 @@ const SignUpScreen = ({navigation}: AuthNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="Last name"
+        placeholderTextColor="#888"
         value={user.lastName}
         onChangeText={text => setUser({...user, lastName: text})}
         autoCapitalize="none"
@@ -116,6 +119,7 @@ const SignUpScreen = ({navigation}: AuthNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#888"
         secureTextEntry
         value={user.password}
         onChangeText={text => setUser({...user, password: text})}
@@ -123,15 +127,19 @@ const SignUpScreen = ({navigation}: AuthNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
+        placeholderTextColor="#888"
         secureTextEntry
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
-      <Button
-        title={loading ? 'Signing up...' : 'Signup'}
+      <TouchableOpacity
+        style={[styles.signupButton, loading && styles.buttonDisabled]}
         onPress={handleSignUp}
-        disabled={loading}
-      />
+        disabled={loading}>
+        <Text style={styles.signupButtonText}>
+          {loading ? 'Signing up...' : 'Signup'}
+        </Text>
+      </TouchableOpacity>
       <TouchableOpacity
         onPress={handleGoogleSignIn}
         style={styles.googleButton}>

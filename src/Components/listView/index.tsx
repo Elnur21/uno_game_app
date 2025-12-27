@@ -1,14 +1,10 @@
 import React from 'react';
 import {
-  View,
-  Text,
   FlatList,
-  Touchable,
-  TouchableOpacity,
   Alert,
 } from 'react-native';
 import {styles} from './style';
-import {Turnir, User} from '../../types/types';
+import {User} from '../../types/types';
 import {useNavigation} from '@react-navigation/native';
 import UserComponent from './User';
 import TurnirComponent from './Turnir';
@@ -25,7 +21,11 @@ const ListView: React.FC<ListViewProps> = ({data, type}) => {
   const handlePress = (item: any) => {
     let route = type == 'turnir' ? 'UsersScreen' : 'ChatroomScreen';
     // @ts-ignore
-    navigation.navigate(route, {item, type});
+    if (route === 'ChatroomScreen') {
+      navigation.navigate(route, {user: item, item, type});
+    } else {
+      navigation.navigate(route, {item, type});
+    }
   };
   function handleJoin(turnirId: string): void {
     const user = getData('user', true);

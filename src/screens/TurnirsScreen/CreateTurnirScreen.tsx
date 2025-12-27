@@ -12,6 +12,7 @@ import {CreateTurnirScreenNavigationProp} from '../../types/navigationProps';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {createData} from '../../storage/firebase';
 import {getData} from '../../storage/local';
+import moment from 'moment';
 
 interface CreateNavigationProp {
   navigation: CreateTurnirScreenNavigationProp;
@@ -31,7 +32,8 @@ const CreateTurnirScreen = ({navigation}: CreateNavigationProp) => {
     setShowPicker(false);
     if (selectedDate) {
       const formattedDate = selectedDate.toISOString();
-      setTurnir({...turnir, startDate: formattedDate});
+      const displayDate = moment(selectedDate).format('YYYY-MM-DD HH:mm');
+      setTurnir({...turnir, startDate: displayDate});
     }
   };
 
@@ -64,6 +66,7 @@ const CreateTurnirScreen = ({navigation}: CreateNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="Turnir name"
+        placeholderTextColor="#888"
         value={turnir.title}
         onChangeText={text => setTurnir({...turnir, title: text})}
         autoCapitalize="none"
@@ -73,6 +76,7 @@ const CreateTurnirScreen = ({navigation}: CreateNavigationProp) => {
         <TextInput
           style={styles.input}
           placeholder="Start date"
+          placeholderTextColor="#888"
           value={turnir.startDate}
           editable={false}
         />
@@ -87,11 +91,14 @@ const CreateTurnirScreen = ({navigation}: CreateNavigationProp) => {
           //   onBlur={() => setShowPicker(false)}
         />
       )}
-      <Button
-        title={loading ? 'Creating...' : 'Create'}
+      <TouchableOpacity
+        style={[styles.createButton, loading && styles.buttonDisabled]}
         onPress={handleCreate}
-        disabled={loading}
-      />
+        disabled={loading}>
+        <Text style={styles.createButtonText}>
+          {loading ? 'Creating...' : 'Create'}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };

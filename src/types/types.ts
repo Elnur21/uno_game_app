@@ -1,14 +1,18 @@
 export type RootStackParamList = {
   MainMenu: undefined;
   OfflineGameScreen: undefined;
-  OnlineGameScreen: undefined;
+  OnlineGameScreen: {matchId?: string; opponent?: User};
+  GameRoomScreen: {matchId: string};
   AuthScreen: undefined;
   SignUpScreen: undefined;
   UsersScreen: undefined;
   TurnirsScreen: undefined;
   CreateTurnirScreen: undefined;
+  ProfileScreen: undefined;
+  ChatsScreen: undefined;
+  FindPlayersScreen: undefined;
   WonScreen: {winner: string};
-  ChatroomScreen: {user: User};
+  ChatroomScreen: {user: User; chatId?: string};
 };
 
 export type User = {
@@ -26,6 +30,8 @@ export interface Message {
   text: string;
   createdAt: any;
   userId: string;
+  type?: 'text' | 'game_invitation';
+  matchId?: string;
 }
 
 export interface Turnir {

@@ -7,6 +7,7 @@ import {PlayerDeck} from '../../Components/PlayerDeck';
 import {EnemyDeck} from '../../Components/EnemyDeck';
 import {ChooseColor} from '../../Components/ChooseColor';
 import {CardsContext} from '../../Contexts/CardsContext';
+import {OnlineCardsContext} from '../../Contexts/OnlineCardsContext';
 
 import {
   OfflineGameScreenNavigationProp,
@@ -19,12 +20,14 @@ interface TableProps {
 }
 
 export function Table({navigation}: TableProps) {
-  const cardsContext = useContext(CardsContext);
+  const onlineContext = useContext(OnlineCardsContext);
+  const offlineContext = useContext(CardsContext);
+  const cardsContext = onlineContext || offlineContext;
 
   if (cardsContext?.winner) {
     setTimeout(() => {
       cardsContext?.winner &&
-        navigation.navigate('WonScreen', {winner: cardsContext?.winner});
+        navigation.replace('WonScreen', {winner: cardsContext?.winner});
     }, 10);
     return <View />;
   }

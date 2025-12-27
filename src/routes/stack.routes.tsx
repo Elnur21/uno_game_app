@@ -10,10 +10,14 @@ import {getData} from '../storage/local';
 import SignOutButton from '../Components/buttons/SignOutButton';
 import {useUserContext} from '../Contexts/UserContext';
 import {UsersScreen} from '../screens/UsersScreen';
-import {Button, Pressable} from 'react-native';
+import {Pressable, Alert} from 'react-native';
 import ChatroomScreen from '../screens/chatScreen';
 import {TurnirsScreen} from '../screens/TurnirsScreen';
 import CreateTurnirScreen from '../screens/TurnirsScreen/CreateTurnirScreen';
+import {ProfileScreen} from '../screens/ProfileScreen';
+import {ChatsScreen} from '../screens/ChatsScreen';
+import {FindPlayersScreen} from '../screens/FindPlayersScreen';
+import {GameRoomScreen} from '../screens/GameRoomScreen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const {Navigator, Screen} = createStackNavigator();
@@ -47,8 +51,28 @@ export default function Stack() {
         },
       }}>
       <Screen name="MainMenu" component={MainMenu} />
-      <Screen name="OfflineGameScreen" component={OfflineGameScreen} />
-      <Screen name="OnlineGameScreen" component={OnlineGameScreen} />
+      <Screen
+        options={({navigation}) => ({
+          headerLeft: () => (
+            <Pressable onPress={() => navigation.goBack()}>
+              <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+            </Pressable>
+          ),
+        })}
+        name="OfflineGameScreen"
+        component={OfflineGameScreen}
+      />
+      <Screen
+        options={({navigation}) => ({
+          headerLeft: () => (
+            <Pressable onPress={() => navigation.goBack()}>
+              <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+            </Pressable>
+          ),
+        })}
+        name="OnlineGameScreen"
+        component={OnlineGameScreen}
+      />
       <Screen name="WonScreen" component={WonScreen} />
       <Screen name="AuthScreen" component={AuthScreen} />
       <Screen name="SignUpScreen" component={SignUpScreen} />
@@ -76,6 +100,24 @@ export default function Stack() {
         component={TurnirsScreen}
       />
       <Screen
+        options={({navigation, route}) => {
+          const user = (route.params as any)?.user || (route.params as any)?.item;
+          const userName = user 
+            ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'Chat'
+            : 'Chat';
+          return {
+            title: userName,
+            headerLeft: () => (
+              <Pressable onPress={() => navigation.goBack()}>
+                <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+              </Pressable>
+            ),
+          };
+        }}
+        name="ChatroomScreen"
+        component={ChatroomScreen}
+      />
+      <Screen
         options={({navigation}) => ({
           headerLeft: () => (
             <Pressable onPress={() => navigation.goBack()}>
@@ -83,8 +125,41 @@ export default function Stack() {
             </Pressable>
           ),
         })}
-        name="ChatroomScreen"
-        component={ChatroomScreen}
+        name="ProfileScreen"
+        component={ProfileScreen}
+      />
+      <Screen
+        options={({navigation}) => ({
+          headerLeft: () => (
+            <Pressable onPress={() => navigation.goBack()}>
+              <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+            </Pressable>
+          ),
+        })}
+        name="ChatsScreen"
+        component={ChatsScreen}
+      />
+      <Screen
+        options={({navigation}) => ({
+          headerLeft: () => (
+            <Pressable onPress={() => navigation.goBack()}>
+              <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+            </Pressable>
+          ),
+        })}
+        name="FindPlayersScreen"
+        component={FindPlayersScreen}
+      />
+      <Screen
+        options={({navigation}) => ({
+          headerLeft: () => (
+            <Pressable onPress={() => navigation.goBack()}>
+              <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+            </Pressable>
+          ),
+        })}
+        name="GameRoomScreen"
+        component={GameRoomScreen}
       />
     </Navigator>
   );

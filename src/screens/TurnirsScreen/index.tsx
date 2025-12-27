@@ -2,7 +2,7 @@ import {TurnirsScreenNavigationProp} from '../../types/navigationProps';
 import {ActivityIndicator, Text, TouchableOpacity, View} from 'react-native';
 import ListView from '../../Components/listView';
 import {useEffect, useState} from 'react';
-import {getAllData} from '../../storage/firebase';
+import firestore from '@react-native-firebase/firestore';
 import {User} from '../../types/types';
 import {getData} from '../../storage/local';
 import {styles} from './style';
@@ -17,14 +17,35 @@ export function TurnirsScreen({navigation}: TurnirsScreenProps) {
   const user = getData('user', true);
 
   useEffect(() => {
-    getAllData('turnirs').then((data: any) => {
-      setTurnirs(data);
-      setLoading(false);
-    });
+    setLoading(true);
+    
+    // Real-time listener for turnirs
+    const unsubscribe = firestore()
+      .collection('turnirs')
+      .onSnapshot(
+        (snapshot) => {
+          const turnirsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setTurnirs(turnirsData as unknown as User[]);
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Error listening to turnirs:', error);
+          setLoading(false);
+        }
+      );
+
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
   }
 
   return (

@@ -3,16 +3,14 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   Alert,
   TouchableOpacity,
-  DevSettings,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {styles} from './style';
 import {AuthScreenNavigationProp} from '../../types/navigationProps';
-import {config} from '../../../config';
+import { config } from '../../../config';
 import {getUserByEmail} from '../../storage/firebase';
 import {setData} from '../../storage/local';
 import {useUserContext} from '../../Contexts/UserContext';
@@ -63,6 +61,7 @@ const AuthScreen = ({navigation}: AuthNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#888"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
@@ -71,15 +70,19 @@ const AuthScreen = ({navigation}: AuthNavigationProp) => {
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#888"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
-      <Button
-        title={loading ? 'Logging in...' : 'Login'}
+      <TouchableOpacity
+        style={[styles.loginButton, loading && styles.buttonDisabled]}
         onPress={handleLogin}
-        disabled={loading}
-      />
+        disabled={loading}>
+        <Text style={styles.loginButtonText}>
+          {loading ? 'Logging in...' : 'Login'}
+        </Text>
+      </TouchableOpacity>
       <View style={styles.separator} />
       <Text style={styles.title}>Don't have an account?</Text>
       <TouchableOpacity

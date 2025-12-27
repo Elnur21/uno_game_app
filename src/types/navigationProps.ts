@@ -37,3 +37,19 @@ export type ChatroomScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'ChatroomScreen'
 >;
+export type ProfileScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'ProfileScreen'
+>;
+export type ChatsScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'ChatsScreen'
+>;
+export type FindPlayersScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'FindPlayersScreen'
+>;
+export type GameRoomScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'GameRoomScreen'
+>;
