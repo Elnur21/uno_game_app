@@ -347,7 +347,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     setTimeout(() => {
       setDrewCard(null);
       setIsDrawing(false);
-      
+       
       const canPlayDrawnCard = actions.canPlay(drewCardValue, tableDeck, null, null, false);
       
       if (canPlayDrawnCard) {
