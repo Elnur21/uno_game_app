@@ -348,18 +348,28 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
       setDrewCard(null);
       setIsDrawing(false);
       
-      const nextIndex = getNextPlayer(currentTurnIndex, turnDirection);
-      const nextPlayerId = players[nextIndex];
+      const canPlayDrawnCard = actions.canPlay(drewCardValue, tableDeck, null, null, false);
       
-      setPlayerTurn(false);
-      setCurrentTurnIndex(nextIndex);
-      
-      syncGameState({
-        drawDeck: newDrawDeck,
-        playerDecks: updatedPlayerDecks,
-        currentTurn: nextPlayerId,
-        currentTurnIndex: nextIndex,
-      });
+      if (canPlayDrawnCard) {
+        setPlayerTurn(true);
+        syncGameState({
+          drawDeck: newDrawDeck,
+          playerDecks: updatedPlayerDecks,
+        });
+      } else {
+        const nextIndex = getNextPlayer(currentTurnIndex, turnDirection);
+        const nextPlayerId = players[nextIndex];
+        
+        setPlayerTurn(false);
+        setCurrentTurnIndex(nextIndex);
+        
+        syncGameState({
+          drawDeck: newDrawDeck,
+          playerDecks: updatedPlayerDecks,
+          currentTurn: nextPlayerId,
+          currentTurnIndex: nextIndex,
+        });
+      }
     }, 500);
   };
 
@@ -399,10 +409,15 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
       let nextIndex = currentTurnIndex;
       let newDirection = turnDirection;
       let needsColorChoice = false;
+      let cardsToDraw = 0;
+      let targetPlayerId: string | null = null;
 
       if (card.value === '+4' || card.value === 'change') {
         needsColorChoice = true;
         setChoosingColor(true);
+        if (card.value === '+4') {
+          nextIndex = getNextPlayer(currentTurnIndex, newDirection);
+        }
       } else if (card.value === 'skip') {
         nextIndex = getNextPlayer(currentTurnIndex, newDirection);
         nextIndex = getNextPlayer(nextIndex, newDirection);
@@ -416,11 +431,26 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         }
       } else if (card.value === '+2') {
         nextIndex = getNextPlayer(currentTurnIndex, newDirection);
+        targetPlayerId = players[nextIndex];
+        cardsToDraw = 2;
       } else {
         nextIndex = getNextPlayer(currentTurnIndex, newDirection);
       }
 
       const nextPlayerId = players[nextIndex];
+
+      if (cardsToDraw > 0 && targetPlayerId && newDrawDeck.length >= cardsToDraw) {
+        const targetPlayerDeck = updatedPlayerDecks[targetPlayerId] || [];
+        const cardsToAdd: Card[] = [];
+        
+        for (let i = 0; i < cardsToDraw && newDrawDeck.length > 0; i++) {
+          const randomNum = Math.floor(Math.random() * newDrawDeck.length);
+          cardsToAdd.push(newDrawDeck[randomNum]);
+          newDrawDeck.splice(randomNum, 1);
+        }
+        
+        updatedPlayerDecks[targetPlayerId] = [...targetPlayerDeck, ...cardsToAdd];
+      }
 
       if (!needsColorChoice) {
         setPlayerTurn(false);
@@ -503,6 +533,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     const newTableDeck = [...tableDeck];
     if (newTableDeck.length > 0) {
       const lastCard = {...newTableDeck[newTableDeck.length - 1]};
+      const wasPlus4 = lastCard.value === '+4';
       lastCard.color = color;
       newTableDeck[newTableDeck.length - 1] = lastCard;
 
@@ -512,11 +543,31 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
       const nextIndex = getNextPlayer(currentTurnIndex, turnDirection);
       const nextPlayerId = players[nextIndex];
       
+      const updatedPlayerDecks = {...playerDecks};
+      let updatedDrawDeck = [...drawDeck];
+      
+      if (wasPlus4 && updatedDrawDeck.length >= 4) {
+        const targetPlayerDeck = updatedPlayerDecks[nextPlayerId] || [];
+        const cardsToAdd: Card[] = [];
+        
+        for (let i = 0; i < 4 && updatedDrawDeck.length > 0; i++) {
+          const randomNum = Math.floor(Math.random() * updatedDrawDeck.length);
+          cardsToAdd.push(updatedDrawDeck[randomNum]);
+          updatedDrawDeck.splice(randomNum, 1);
+        }
+        
+        updatedPlayerDecks[nextPlayerId] = [...targetPlayerDeck, ...cardsToAdd];
+        setDrawDeck(updatedDrawDeck);
+        setPlayerDecks(updatedPlayerDecks);
+      }
+      
       setPlayerTurn(false);
       setCurrentTurnIndex(nextIndex);
 
       syncGameState({
         tableDeck: newTableDeck,
+        drawDeck: updatedDrawDeck,
+        playerDecks: updatedPlayerDecks,
         choosingColor: false,
         choosingColorPlayerId: null,
         currentTurn: nextPlayerId,
