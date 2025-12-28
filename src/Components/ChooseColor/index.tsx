@@ -3,9 +3,12 @@ import { View, Text, TouchableOpacity } from 'react-native';
 
 import { styles } from './styles';
 import { CardsContext } from '../../Contexts/CardsContext';
+import { OnlineCardsContext } from '../../Contexts/OnlineCardsContext';
 
 export function ChooseColor() {
-    const cardsContext = useContext(CardsContext);
+    const onlineContext = useContext(OnlineCardsContext);
+    const offlineContext = useContext(CardsContext);
+    const cardsContext = onlineContext || offlineContext;
 
     function chooseColor(color: string) {
         cardsContext?.chooseColor(color);

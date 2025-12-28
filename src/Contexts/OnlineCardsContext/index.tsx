@@ -139,7 +139,8 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
             setCurrentTurnIndex(turnIndex >= 0 ? turnIndex : 0);
             setPlayerTurn(currentTurnId === currentUser.uid);
             setTurnDirection(state.turnDirection || 1);
-            setChoosingColor(state.choosingColor || false);
+            const choosingColorPlayerId = state.choosingColorPlayerId;
+            setChoosingColor(state.choosingColor && choosingColorPlayerId === currentUser.uid);
             
             setTimeout(() => {
               setGameInitialized(true);
@@ -234,9 +235,9 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         }
         
         setTurnDirection(state.turnDirection || 1);
-        setChoosingColor(state.choosingColor || false);
+        const choosingColorPlayerId = state.choosingColorPlayerId;
+        setChoosingColor(state.choosingColor && choosingColorPlayerId === currentUser.uid);
         
-        // Ensure game is initialized when we have valid game state
         if (!initializationAttemptedRef.current && state.playerDecks && Object.keys(state.playerDecks).length > 0 && state.playerDecks[currentUser.uid]) {
           initializationAttemptedRef.current = true;
           setTimeout(() => {
@@ -434,6 +435,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         currentTurnIndex: needsColorChoice ? currentTurnIndex : nextIndex,
         turnDirection: newDirection,
         choosingColor: needsColorChoice,
+        choosingColorPlayerId: needsColorChoice ? currentUser?.uid || '' : null,
         lastPlayedCard: card,
       });
     }, 500);
@@ -461,7 +463,6 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
 
       if (!winnerId) return;
 
-      // Set winner name
       if (winnerId === currentUser.uid) {
         setWinner('YOU WON');
       } else {
@@ -483,7 +484,6 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         }
       }
 
-      // Update Firestore
       await firestore().collection('games').doc(matchId).update({
         'gameState.winner': winnerId,
         status: 'completed',
@@ -518,6 +518,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
       syncGameState({
         tableDeck: newTableDeck,
         choosingColor: false,
+        choosingColorPlayerId: null,
         currentTurn: nextPlayerId,
         currentTurnIndex: nextIndex,
       });
