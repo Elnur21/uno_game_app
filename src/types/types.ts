@@ -5,7 +5,7 @@ export type RootStackParamList = {
   GameRoomScreen: {matchId: string};
   AuthScreen: undefined;
   SignUpScreen: undefined;
-  UsersScreen: undefined;
+  UsersScreen: {item: Turnir; type: 'turnir'} | undefined;
   TurnirsScreen: undefined;
   CreateTurnirScreen: undefined;
   ProfileScreen: undefined;
