@@ -292,23 +292,30 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     gameRef.get().then((doc) => {
       if (doc.exists) {
         const currentState = doc.data()?.gameState || {};
+        
+        let mergedPlayerDecks = {...(currentState.playerDecks || {})};
+        if (updates.playerDecks) {
+          mergedPlayerDecks = {
+            ...mergedPlayerDecks,
+            ...updates.playerDecks,
+          };
+        }
+        
         const newState = {
           ...currentState,
           ...updates,
+          playerDecks: mergedPlayerDecks,
         };
-
-        if (currentState.playerDecks) {
-          newState.playerDecks = {
-            ...currentState.playerDecks,
-            ...(updates.playerDecks || {}),
-          };
-        }
 
         gameRef.update({
           gameState: newState,
           lastUpdated: firestore.FieldValue.serverTimestamp(),
+        }).catch((error) => {
+          console.error('Error syncing game state:', error);
         });
       }
+    }).catch((error) => {
+      console.error('Error getting game document for sync:', error);
     });
   };
 
@@ -430,9 +437,12 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
           nextIndex = getNextPlayer(currentTurnIndex, newDirection);
         }
       } else if (card.value === '+2') {
+        // Next player draws 2 cards and their turn is skipped
         nextIndex = getNextPlayer(currentTurnIndex, newDirection);
         targetPlayerId = players[nextIndex];
         cardsToDraw = 2;
+        // Skip the player who drew cards
+        nextIndex = getNextPlayer(nextIndex, newDirection);
       } else {
         nextIndex = getNextPlayer(currentTurnIndex, newDirection);
       }
@@ -450,6 +460,14 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         }
         
         updatedPlayerDecks[targetPlayerId] = [...targetPlayerDeck, ...cardsToAdd];
+      }
+
+      setDrawDeck(newDrawDeck);
+      setPlayerDecks(updatedPlayerDecks);
+      setTableDeck(newTableDeck);
+      
+      if (newDirection !== turnDirection) {
+        setTurnDirection(newDirection);
       }
 
       if (!needsColorChoice) {
@@ -540,14 +558,14 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
       setTableDeck(newTableDeck);
       setChoosingColor(false);
       
-      const nextIndex = getNextPlayer(currentTurnIndex, turnDirection);
-      const nextPlayerId = players[nextIndex];
+      let finalNextIndex = getNextPlayer(currentTurnIndex, turnDirection);
+      let finalNextPlayerId = players[finalNextIndex];
       
       const updatedPlayerDecks = {...playerDecks};
       let updatedDrawDeck = [...drawDeck];
       
       if (wasPlus4 && updatedDrawDeck.length >= 4) {
-        const targetPlayerDeck = updatedPlayerDecks[nextPlayerId] || [];
+        const targetPlayerDeck = updatedPlayerDecks[finalNextPlayerId] || [];
         const cardsToAdd: Card[] = [];
         
         for (let i = 0; i < 4 && updatedDrawDeck.length > 0; i++) {
@@ -556,13 +574,16 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
           updatedDrawDeck.splice(randomNum, 1);
         }
         
-        updatedPlayerDecks[nextPlayerId] = [...targetPlayerDeck, ...cardsToAdd];
+        updatedPlayerDecks[finalNextPlayerId] = [...targetPlayerDeck, ...cardsToAdd];
+        finalNextIndex = getNextPlayer(finalNextIndex, turnDirection);
+        finalNextPlayerId = players[finalNextIndex];
+        
         setDrawDeck(updatedDrawDeck);
         setPlayerDecks(updatedPlayerDecks);
       }
       
       setPlayerTurn(false);
-      setCurrentTurnIndex(nextIndex);
+      setCurrentTurnIndex(finalNextIndex);
 
       syncGameState({
         tableDeck: newTableDeck,
@@ -570,8 +591,8 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         playerDecks: updatedPlayerDecks,
         choosingColor: false,
         choosingColorPlayerId: null,
-        currentTurn: nextPlayerId,
-        currentTurnIndex: nextIndex,
+        currentTurn: finalNextPlayerId,
+        currentTurnIndex: finalNextIndex,
       });
     }
   };
