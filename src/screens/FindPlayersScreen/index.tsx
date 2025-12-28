@@ -12,7 +12,7 @@ import {
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import {FindPlayersScreenNavigationProp} from '../../types/navigationProps';
-import {searchUsers, createMatch, acceptMatch, addPlayerToMatch} from '../../storage/firebase';
+import {searchUsers, createMatch, acceptMatch, addPlayerToMatch, findOrCreateChat} from '../../storage/firebase';
 import {User} from '../../types/types';
 import {getData} from '../../storage/local';
 
@@ -156,11 +156,15 @@ export function FindPlayersScreen({navigation}: FindPlayersScreenProps) {
     try {
       if (existingMatchId) {
         // Add player to existing match
-        await addPlayerToMatch(existingMatchId, user.id || user.email);
+        // Find or create chat first
+        const chatId = await findOrCreateChat(currentUser.uid, user.id || user.email);
+        await addPlayerToMatch(existingMatchId, user.id || user.email, chatId);
         Alert.alert('Player Added', `${user.firstName} ${user.lastName} has been added to the game!`);
       } else {
         // Create new match
-        const matchId = await createMatch(currentUser.uid, user.id || user.email);
+        // Find or create chat first so invitation appears in chat
+        const chatId = await findOrCreateChat(currentUser.uid, user.id || user.email);
+        const matchId = await createMatch(currentUser.uid, user.id || user.email, chatId);
         Alert.alert('Invitation Sent', `You've invited ${user.firstName} ${user.lastName} to play!`);
       }
     } catch (error: any) {

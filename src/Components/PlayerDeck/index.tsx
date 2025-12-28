@@ -3,16 +3,19 @@ import { View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 
 import { styles } from './styles';
 import { PlayerCard } from '../PlayerCard';
-import { CardsContext } from '../../Contexts/CardsContext'
+import { CardsContext } from '../../Contexts/CardsContext';
+import { OnlineCardsContext } from '../../Contexts/OnlineCardsContext';
 
 export function PlayerDeck() {
-  const cardsContext = useContext(CardsContext);
+  const onlineContext = useContext(OnlineCardsContext);
+  const offlineContext = useContext(CardsContext);
+  const cardsContext = onlineContext || offlineContext;
 
   return (
     <SafeAreaView style={styles.sav}>
       <ScrollView>
         <View style={styles.container}>
-          {cardsContext?.playerDeck.map((card, index) => (
+          {cardsContext?.playerDeck?.map((card, index) => (
             <TouchableOpacity
               key={index}
               disabled={!cardsContext?.canPlay(card) || !cardsContext?.playerTurn}

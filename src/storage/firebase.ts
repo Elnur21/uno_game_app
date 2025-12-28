@@ -289,6 +289,7 @@ export const createMatch = async (player1Id: string, player2Identifier: string, 
       status: 'pending',
       createdAt: firestore.FieldValue.serverTimestamp(),
       currentTurn: player1Id, // Host starts
+      chatId: chatId || null, // Link to chat if available
     });
 
     // Send game invitation message to chat if chatId provided

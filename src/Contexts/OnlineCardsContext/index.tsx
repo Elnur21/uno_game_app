@@ -37,6 +37,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
   const playerIndexRef = useRef<number>(-1);
   const playerHadCardsRef = useRef<boolean>(false);
   const playerHasPlayedRef = useRef<boolean>(false); // Track if player has actually played
+  const initializationAttemptedRef = useRef<boolean>(false);
 
   const getNextPlayer = (currentIndex: number, direction: number) => {
     if (players.length === 0) return currentIndex;
@@ -51,7 +52,9 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
 
     playerHadCardsRef.current = false;
     playerHasPlayedRef.current = false;
+    initializationAttemptedRef.current = false;
     setWinner(null);
+    setGameInitialized(false);
 
     const matchRef = firestore().collection('matches').doc(matchId);
     const gameRef = firestore().collection('games').doc(matchId);
@@ -208,6 +211,10 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         }
 
         const currentPlayers = players.length > 0 ? players : gameData?.players || [];
+        if (currentPlayers.length > 0 && players.length === 0) {
+          setPlayers(currentPlayers);
+        }
+        
         const enemyDecks: Card[] = [];
         currentPlayers.forEach((playerId: string) => {
           if (playerId !== currentUser.uid && state.playerDecks?.[playerId]) {
@@ -228,6 +235,14 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         
         setTurnDirection(state.turnDirection || 1);
         setChoosingColor(state.choosingColor || false);
+        
+        // Ensure game is initialized when we have valid game state
+        if (!initializationAttemptedRef.current && state.playerDecks && Object.keys(state.playerDecks).length > 0 && state.playerDecks[currentUser.uid]) {
+          initializationAttemptedRef.current = true;
+          setTimeout(() => {
+            setGameInitialized(true);
+          }, 100);
+        }
 
         if (state.winner && gameInitialized) {
           if (matchId) {
@@ -579,10 +594,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     currentTurn: players[currentTurnIndex] || undefined,
   };
 
-  if (!gameInitialized) {
-    return null;
-  }
-
+  // Always provide context, but components can check gameInitialized if needed
   return (
     <OnlineCardsContext.Provider value={contextValue}>
       {children}
