@@ -1,5 +1,5 @@
 import React, {useContext} from 'react';
-import {View, Text} from 'react-native';
+import {View, Text, TouchableOpacity, Alert} from 'react-native';
 
 import {styles} from './styles';
 import {Middle} from '../../Components/Middle';
@@ -32,6 +32,29 @@ export function Table({navigation}: TableProps) {
     return <View />;
   }
 
+  const handleFinishGame = () => {
+    Alert.alert(
+      'Finish Game',
+      'Are you sure you want to finish the game? The player with the fewest cards will win.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Finish',
+          style: 'destructive',
+          onPress: () => {
+            if (cardsContext?.finishGame) {
+              cardsContext.finishGame();
+            }
+          },
+        },
+      ],
+      {cancelable: true}
+    );
+  };
+
   return (
     <View style={styles.container}>
       <EnemyDeck />
@@ -51,6 +74,10 @@ export function Table({navigation}: TableProps) {
       </View>
 
       {cardsContext?.choosingColor && <ChooseColor />}
+
+      <TouchableOpacity style={styles.finishButton} onPress={handleFinishGame}>
+        <Text style={styles.finishButtonText}>FINISH GAME</Text>
+      </TouchableOpacity>
     </View>
   );
 }

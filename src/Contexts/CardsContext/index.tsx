@@ -62,6 +62,19 @@ export const CardsProvider = ({ children }: Props) => {
         startGame();
     }, [])
 
+    function finishGame() {
+        const playerCardCount = playerDeck.length;
+        const enemyCardCount = enemyDeck.length;
+
+        if (playerCardCount < enemyCardCount) {
+            setWinner("YOU WON");
+        } else if (enemyCardCount < playerCardCount) {
+            setWinner("LOSER");
+        } else {
+            setWinner("YOU WON");
+        }
+    }
+
     const contextValue: CardsContextProps = {
         drawDeck,
         setDrawDeck,
@@ -82,7 +95,8 @@ export const CardsProvider = ({ children }: Props) => {
         canDraw,
         winner,
         playedCard,
-        drewCard
+        drewCard,
+        finishGame,
     };
 
     return (

@@ -439,6 +439,64 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     }, 500);
   };
 
+  const finishGameOnline = async () => {
+    if (!matchId || !currentUser?.uid || winner) return;
+
+    try {
+      const allPlayerDecks = {
+        ...playerDecks,
+        [currentUser?.uid || '']: playerDeck,
+      };
+
+      let minCards = Infinity;
+      let winnerId: string | null = null;
+
+      Object.keys(allPlayerDecks).forEach((playerId) => {
+        const cardCount = allPlayerDecks?.[playerId]?.length || 0;
+        if (cardCount < minCards) {
+          minCards = cardCount;
+          winnerId = playerId;
+        }
+      });
+
+      if (!winnerId) return;
+
+      // Set winner name
+      if (winnerId === currentUser.uid) {
+        setWinner('YOU WON');
+      } else {
+        if (playerInfo[winnerId]?.name) {
+          setWinner(`${playerInfo?.[winnerId]?.name || 'Unknown Player'} WON`);
+        } else {
+          try {
+            const userDoc = await firestore().collection('users').doc(winnerId).get();
+            if (userDoc.exists) {
+              const userData = userDoc.data();
+              const winnerName = `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || userData?.email || 'Unknown Player';
+              setWinner(`${winnerName} WON`);
+            } else {
+              setWinner('SOMEONE WON');
+            }
+          } catch (error) {
+            setWinner('SOMEONE WON');
+          }
+        }
+      }
+
+      // Update Firestore
+      await firestore().collection('games').doc(matchId).update({
+        'gameState.winner': winnerId,
+        status: 'completed',
+      });
+
+      await firestore().collection('matches').doc(matchId).update({
+        status: 'completed',
+      });
+    } catch (error) {
+      console.error('Error finishing game:', error);
+    }
+  };
+
   const chooseColorOnline = (color: string) => {
     if (!choosingColor) return;
 
@@ -592,9 +650,9 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     playerDecks,
     playerInfo,
     currentTurn: players[currentTurnIndex] || undefined,
+    finishGame: finishGameOnline,
   };
 
-  // Always provide context, but components can check gameInitialized if needed
   return (
     <OnlineCardsContext.Provider value={contextValue}>
       {children}

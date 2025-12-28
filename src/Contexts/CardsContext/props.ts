@@ -21,4 +21,5 @@ export interface CardsContextProps {
     winner: string | null;
     playedCard: PlayedCard | null;
     drewCard: DrewCard | null;
+    finishGame?: () => void;
 }
