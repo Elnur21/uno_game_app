@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -37,6 +37,7 @@ export function ChatsScreen({navigation}: ChatsScreenProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
+  const prevChatsRef = useRef<string>('');
 
   const currentUser = auth().currentUser;
 
@@ -117,7 +118,12 @@ export function ChatsScreen({navigation}: ChatsScreenProps) {
                             return new Date(timeB).getTime() - new Date(timeA).getTime();
                           });
 
-                          setChats(sortedChats);
+                          // Only update if chats actually changed
+                          const chatsStr = sortedChats.map(c => `${c.id}:${c.lastMessage?.text || ''}:${c.lastMessage?.createdAt?.toMillis?.() || ''}`).join('|');
+                          if (chatsStr !== prevChatsRef.current) {
+                            prevChatsRef.current = chatsStr;
+                            setChats(sortedChats);
+                          }
                           setLoading(false);
                         }
                       });
@@ -142,19 +148,23 @@ export function ChatsScreen({navigation}: ChatsScreenProps) {
             }
           }
 
-          if (chatsMap.size > 0) {
-            const sortedChats = Array.from(chatsMap.values()).sort((a, b) => {
-              if (!a.lastMessage && !b.lastMessage) return 0;
-              if (!a.lastMessage) return 1;
-              if (!b.lastMessage) return -1;
+          const sortedChats = chatsMap.size > 0
+            ? Array.from(chatsMap.values()).sort((a, b) => {
+                if (!a.lastMessage && !b.lastMessage) return 0;
+                if (!a.lastMessage) return 1;
+                if (!b.lastMessage) return -1;
 
-              const timeA = a.lastMessage.createdAt?.toDate?.() || a.lastMessage.createdAt;
-              const timeB = b.lastMessage.createdAt?.toDate?.() || b.lastMessage.createdAt;
-              return new Date(timeB).getTime() - new Date(timeA).getTime();
-            });
+                const timeA = a.lastMessage.createdAt?.toDate?.() || a.lastMessage.createdAt;
+                const timeB = b.lastMessage.createdAt?.toDate?.() || b.lastMessage.createdAt;
+                return new Date(timeB).getTime() - new Date(timeA).getTime();
+              })
+            : [];
+          
+          // Only update if chats actually changed (compare by IDs and last message)
+          const chatsStr = sortedChats.map(c => `${c.id}:${c.lastMessage?.text || ''}:${c.lastMessage?.createdAt?.toMillis?.() || ''}`).join('|');
+          if (chatsStr !== prevChatsRef.current) {
+            prevChatsRef.current = chatsStr;
             setChats(sortedChats);
-          } else {
-            setChats([]);
           }
           setLoading(false);
         },

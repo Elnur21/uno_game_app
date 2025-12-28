@@ -1,4 +1,4 @@
-import React, {ReactNode, createContext, useEffect, useState, useRef} from 'react';
+import React, {ReactNode, createContext, useEffect, useState, useRef, useCallback} from 'react';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import {Card, DrewCard, PlayedCard} from '../CardsContext/types';
@@ -38,6 +38,17 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
   const playerHadCardsRef = useRef<boolean>(false);
   const playerHasPlayedRef = useRef<boolean>(false); // Track if player has actually played
   const initializationAttemptedRef = useRef<boolean>(false);
+  
+  // Refs to track previous values and prevent unnecessary updates
+  const prevDrawDeckRef = useRef<string>('');
+  const prevTableDeckRef = useRef<string>('');
+  const prevPlayerDecksRef = useRef<string>('');
+  const prevPlayerDeckRef = useRef<string>('');
+  const prevEnemyDeckRef = useRef<string>('');
+  const prevTurnIndexRef = useRef<number>(-1);
+  const prevPlayerTurnRef = useRef<boolean>(true);
+  const prevTurnDirectionRef = useRef<number>(1);
+  const prevChoosingColorRef = useRef<boolean>(false);
 
   const getNextPlayer = (currentIndex: number, direction: number) => {
     if (players.length === 0) return currentIndex;
@@ -199,15 +210,53 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
       const state = gameData?.gameState;
 
       if (state) {
-        setDrawDeck(state.drawDeck || []);
-        setTableDeck(state.tableDeck || []);
-        setPlayerDecks(state.playerDecks || {});
+        const newDrawDeck = state.drawDeck || [];
+        const newTableDeck = state.tableDeck || [];
+        const newPlayerDecks = state.playerDecks || {};
         
-        if (state.playerDecks && state.playerDecks[currentUser.uid]) {
-          const deck = state.playerDecks[currentUser.uid];
-          setPlayerDeck(deck);
-          if (deck.length > 0) {
-            playerHadCardsRef.current = true;
+        // Only update if values actually changed (using refs for comparison)
+        const drawDeckStr = JSON.stringify(newDrawDeck);
+        const tableDeckStr = JSON.stringify(newTableDeck);
+        const playerDecksStr = JSON.stringify(newPlayerDecks);
+        
+        if (drawDeckStr !== prevDrawDeckRef.current) {
+          prevDrawDeckRef.current = drawDeckStr;
+          setDrawDeck(newDrawDeck);
+        }
+        
+        if (tableDeckStr !== prevTableDeckRef.current) {
+          prevTableDeckRef.current = tableDeckStr;
+          setTableDeck(newTableDeck);
+        }
+        
+        if (playerDecksStr !== prevPlayerDecksRef.current) {
+          prevPlayerDecksRef.current = playerDecksStr;
+          setPlayerDecks(newPlayerDecks);
+          
+          // Recalculate enemy decks when playerDecks change
+          const currentPlayers = players.length > 0 ? players : gameData?.players || [];
+          const enemyDecks: Card[] = [];
+          currentPlayers.forEach((playerId: string) => {
+            if (playerId !== currentUser.uid && newPlayerDecks?.[playerId]) {
+              enemyDecks.push(...newPlayerDecks[playerId]);
+            }
+          });
+          const enemyDecksStr = JSON.stringify(enemyDecks);
+          if (enemyDecksStr !== prevEnemyDeckRef.current) {
+            prevEnemyDeckRef.current = enemyDecksStr;
+            setEnemyDeck(enemyDecks);
+          }
+        }
+        
+        if (newPlayerDecks && newPlayerDecks[currentUser.uid]) {
+          const deck = newPlayerDecks[currentUser.uid];
+          const deckStr = JSON.stringify(deck);
+          if (deckStr !== prevPlayerDeckRef.current) {
+            prevPlayerDeckRef.current = deckStr;
+            setPlayerDeck(deck);
+            if (deck.length > 0) {
+              playerHadCardsRef.current = true;
+            }
           }
         }
 
@@ -215,28 +264,37 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         if (currentPlayers.length > 0 && players.length === 0) {
           setPlayers(currentPlayers);
         }
-        
-        const enemyDecks: Card[] = [];
-        currentPlayers.forEach((playerId: string) => {
-          if (playerId !== currentUser.uid && state.playerDecks?.[playerId]) {
-            enemyDecks.push(...state.playerDecks[playerId]);
-          }
-        });
-        setEnemyDeck(enemyDecks);
 
         const currentTurnId = state.currentTurn;
         if (currentTurnId) {
           const currentPlayers = players.length > 0 ? players : gameData?.players || [];
           const turnIndex = currentPlayers.findIndex((id: string) => id === currentTurnId);
           if (turnIndex >= 0) {
-            setCurrentTurnIndex(turnIndex);
-            setPlayerTurn(currentTurnId === currentUser.uid);
+            if (turnIndex !== prevTurnIndexRef.current) {
+              prevTurnIndexRef.current = turnIndex;
+              setCurrentTurnIndex(turnIndex);
+            }
+            
+            const newPlayerTurn = currentTurnId === currentUser.uid;
+            if (newPlayerTurn !== prevPlayerTurnRef.current) {
+              prevPlayerTurnRef.current = newPlayerTurn;
+              setPlayerTurn(newPlayerTurn);
+            }
           }
         }
         
-        setTurnDirection(state.turnDirection || 1);
+        const newTurnDirection = state.turnDirection || 1;
+        if (newTurnDirection !== prevTurnDirectionRef.current) {
+          prevTurnDirectionRef.current = newTurnDirection;
+          setTurnDirection(newTurnDirection);
+        }
+        
         const choosingColorPlayerId = state.choosingColorPlayerId;
-        setChoosingColor(state.choosingColor && choosingColorPlayerId === currentUser.uid);
+        const newChoosingColor = state.choosingColor && choosingColorPlayerId === currentUser.uid;
+        if (newChoosingColor !== prevChoosingColorRef.current) {
+          prevChoosingColorRef.current = newChoosingColor;
+          setChoosingColor(newChoosingColor);
+        }
         
         if (!initializationAttemptedRef.current && state.playerDecks && Object.keys(state.playerDecks).length > 0 && state.playerDecks[currentUser.uid]) {
           initializationAttemptedRef.current = true;

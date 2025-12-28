@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, TextInput, FlatList, Text, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -79,6 +79,8 @@ const ChatroomScreen = ({ route }: any) => {
 
     const chatId = providedChatId || getChatId(currentUser.uid, otherUserUid);
 
+    const messagesRef = useRef<Message[]>([]);
+    
     const unsubscribe = firestore()
       .collection('chats')
       .doc(chatId)
@@ -104,7 +106,16 @@ const ChatroomScreen = ({ route }: any) => {
               }
             }
           });
-          setMessages(loadedMessages);
+          
+          // Only update if messages actually changed (compare by IDs and length for efficiency)
+          const currentIds = messagesRef.current.map(m => m.id).join(',');
+          const newIds = loadedMessages.map(m => m.id).join(',');
+          const messagesChanged = currentIds !== newIds || messagesRef.current.length !== loadedMessages.length;
+          
+          if (messagesChanged) {
+            messagesRef.current = loadedMessages;
+            setMessages(loadedMessages);
+          }
         },
         error => {
           console.error('Error fetching messages:', error);
