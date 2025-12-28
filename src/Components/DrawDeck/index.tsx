@@ -1,11 +1,14 @@
-import React, { useContext, useEffect } from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import React, { useContext } from 'react';
+import { TouchableOpacity } from 'react-native';
 
 import { CardBack } from '../CardBack';
 import { CardsContext } from '../../Contexts/CardsContext';
+import { OnlineCardsContext } from '../../Contexts/OnlineCardsContext';
 
 export function DrawDeck() {
-  const cardsContext = useContext(CardsContext);
+  const onlineContext = useContext(OnlineCardsContext);
+  const offlineContext = useContext(CardsContext);
+  const cardsContext = onlineContext || offlineContext;
 
   function drawCard() {
     cardsContext?.playerDraw();

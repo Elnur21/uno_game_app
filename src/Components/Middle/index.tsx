@@ -8,9 +8,12 @@ import { PlayedCard } from '../../Components/PlayedCard';
 import { DrewCard } from '../../Components/DrewCard';
 
 import { CardsContext } from '../../Contexts/CardsContext';
+import { OnlineCardsContext } from '../../Contexts/OnlineCardsContext';
 
 export function Middle() {
-  const cardsContext = useContext(CardsContext);
+  const onlineContext = useContext(OnlineCardsContext);
+  const offlineContext = useContext(CardsContext);
+  const cardsContext = onlineContext || offlineContext;
   const playedCard = cardsContext?.playedCard;
   const drewCard = cardsContext?.drewCard;
 

@@ -4,9 +4,12 @@ import { View } from 'react-native';
 import { styles } from './styles';
 import { PlayerCard } from '../PlayerCard';
 import { CardsContext } from '../../Contexts/CardsContext';
+import { OnlineCardsContext } from '../../Contexts/OnlineCardsContext';
 
 export function PlayingArea() {
-  const cardsContext = useContext(CardsContext);
+  const onlineContext = useContext(OnlineCardsContext);
+  const offlineContext = useContext(CardsContext);
+  const cardsContext = onlineContext || offlineContext;
 
   const tableDeck = cardsContext?.tableDeck;
 
