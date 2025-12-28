@@ -81,5 +81,6 @@ To learn more about React Native, take a look at the following resources:
 
 # Andoid build
 
+cd android
 ./gradlew clean
 ./gradlew assembleRelease
