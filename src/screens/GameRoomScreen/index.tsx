@@ -14,6 +14,8 @@ import {GameRoomScreenNavigationProp} from '../../types/navigationProps';
 import {User} from '../../types/types';
 import * as actions from '../../Contexts/CardsContext/actions';
 
+const MAX_MATCH_PLAYERS = 10;
+
 interface RouteParams {
   matchId?: string;
 }
@@ -205,7 +207,7 @@ export function GameRoomScreen() {
       <Text style={styles.title}>Game Room</Text>
       
       <View style={styles.playersContainer}>
-        <Text style={styles.playersTitle}>Players ({players.length})</Text>
+        <Text style={styles.playersTitle}>Players ({players.length}/{MAX_MATCH_PLAYERS})</Text>
         {players.map((playerId, index) => {
           const player = playerInfo[playerId];
           const isCurrentUser = playerId === currentUser?.uid;
@@ -241,6 +243,13 @@ export function GameRoomScreen() {
           <Text style={styles.waitingSubtext}>
             Need at least 2 players to start
           </Text>
+        </View>
+      )}
+
+      {players.length >= MAX_MATCH_PLAYERS && (
+        <View style={styles.waitingContainer}>
+          <Text style={styles.waitingText}>Room is full</Text>
+          <Text style={styles.waitingSubtext}>Maximum 10 players reached</Text>
         </View>
       )}
 

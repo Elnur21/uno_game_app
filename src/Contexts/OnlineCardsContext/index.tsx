@@ -11,6 +11,14 @@ interface Props {
   opponentId?: string;
 }
 
+interface PendingPlus4Challenge {
+  active: boolean;
+  playedBy: string;
+  targetPlayerId: string;
+  previousColor: string;
+  isBluff: boolean;
+}
+
 export const OnlineCardsContext = createContext<CardsContextProps | undefined>(undefined);
 
 export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
@@ -32,12 +40,15 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
   const [playerInfo, setPlayerInfo] = useState<{[playerId: string]: {name: string; email: string}}>({});
   const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
   const [turnDirection, setTurnDirection] = useState(1); // 1 for forward, -1 for reverse
+  const [pendingPlus4Challenge, setPendingPlus4Challenge] = useState<PendingPlus4Challenge | null>(null);
   
   const currentUser = auth().currentUser;
   const playerIndexRef = useRef<number>(-1);
   const playerHadCardsRef = useRef<boolean>(false);
   const playerHasPlayedRef = useRef<boolean>(false); // Track if player has actually played
   const initializationAttemptedRef = useRef<boolean>(false);
+  const playerInfoRef = useRef<{[playerId: string]: {name: string; email: string}}>({});
+  const opponentHadCardsRef = useRef<{[playerId: string]: boolean}>({});
   
   // Refs to track previous values and prevent unnecessary updates
   const prevDrawDeckRef = useRef<string>('');
@@ -58,12 +69,59 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     return nextIndex;
   };
 
+  const isPlus2Card = (value: string) => value === '+2' || value === '2+';
+  const isPlus4Card = (value: string) => value === '+4' || value === '4+';
+
+  const drawCardsForTarget = (
+    targetPlayerId: string,
+    cardsToDraw: number,
+    sourceDrawDeck: Card[],
+    sourcePlayerDecks: {[playerId: string]: Card[]},
+    sourceTableDeck: Card[]
+  ) => {
+    const updatedDrawDeck = [...sourceDrawDeck];
+    const updatedTableDeck = [...sourceTableDeck];
+    const updatedPlayerDecks = {...sourcePlayerDecks};
+    const targetDeck = [...(updatedPlayerDecks[targetPlayerId] || [])];
+
+    const refillIfNeeded = () => {
+      if (updatedDrawDeck.length > 0 || updatedTableDeck.length <= 1) return;
+      const topCard = updatedTableDeck[updatedTableDeck.length - 1];
+      const recyclableCards = updatedTableDeck.slice(0, -1);
+      for (let i = recyclableCards.length - 1; i > 0; i--) {
+        const randomIndex = Math.floor(Math.random() * (i + 1));
+        const tmp = recyclableCards[i];
+        recyclableCards[i] = recyclableCards[randomIndex];
+        recyclableCards[randomIndex] = tmp;
+      }
+      updatedDrawDeck.splice(0, updatedDrawDeck.length, ...recyclableCards);
+      updatedTableDeck.splice(0, updatedTableDeck.length, topCard);
+    };
+
+    for (let i = 0; i < cardsToDraw; i++) {
+      refillIfNeeded();
+      if (updatedDrawDeck.length === 0) break;
+      const randomNum = Math.floor(Math.random() * updatedDrawDeck.length);
+      targetDeck.push(updatedDrawDeck[randomNum]);
+      updatedDrawDeck.splice(randomNum, 1);
+    }
+
+    updatedPlayerDecks[targetPlayerId] = targetDeck;
+    return {updatedDrawDeck, updatedPlayerDecks, updatedTableDeck};
+  };
+
+  const getPlayerIndexById = (playerId: string) => {
+    const index = players.findIndex(id => id === playerId);
+    return index >= 0 ? index : 0;
+  };
+
   useEffect(() => {
     if (!matchId || !currentUser?.uid) return;
 
     playerHadCardsRef.current = false;
     playerHasPlayedRef.current = false;
     initializationAttemptedRef.current = false;
+    opponentHadCardsRef.current = {};
     setWinner(null);
     setGameInitialized(false);
 
@@ -99,6 +157,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         infoMap[playerId] = {name, email};
       });
       setPlayerInfo(infoMap);
+      playerInfoRef.current = infoMap;
 
       gameRef.get().then((gameDoc) => {
         if (gameDoc.exists) {
@@ -116,10 +175,11 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
               playerHadCardsRef.current = deck.length > 0;
             } else {
               const newPlayerDecks = {...state.playerDecks};
-              if (!newPlayerDecks[currentUser.uid] && state.drawDeck && state.drawDeck.length >= 7) {
+              const initialHandSize = state.initialHandSize || Math.max(1, Math.floor(((state.drawDeck?.length || 0) - 1) / Math.max(1, matchPlayers.length)));
+              if (!newPlayerDecks[currentUser.uid] && state.drawDeck && state.drawDeck.length >= initialHandSize) {
                 const newPlayerDeck: Card[] = [];
                 const updatedDrawDeck = [...state.drawDeck];
-                for (let i = 0; i < 7; i++) {
+                for (let i = 0; i < initialHandSize; i++) {
                   const randomNum = Math.floor(Math.random() * updatedDrawDeck.length);
                   newPlayerDeck.push(updatedDrawDeck[randomNum]);
                   updatedDrawDeck.splice(randomNum, 1);
@@ -131,6 +191,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
                 gameRef.update({
                   'gameState.playerDecks': newPlayerDecks,
                   'gameState.drawDeck': updatedDrawDeck,
+                  'gameState.initialHandSize': initialHandSize,
                 });
               } else {
                 playerHadCardsRef.current = false;
@@ -168,6 +229,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
                   drawDeck: initialState.drawDeck,
                   playerDecks: initialState.playerDecks,
                   tableDeck: initialState.tableDeck,
+                  initialHandSize: initialState.handSize,
                   currentTurn: matchPlayers[initialTurnIndex],
                   currentTurnIndex: initialTurnIndex,
                   turnDirection: 1,
@@ -213,6 +275,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         const newDrawDeck = state.drawDeck || [];
         const newTableDeck = state.tableDeck || [];
         const newPlayerDecks = state.playerDecks || {};
+        const newPendingPlus4Challenge = state.pendingPlus4Challenge || null;
         
         // Only update if values actually changed (using refs for comparison)
         const drawDeckStr = JSON.stringify(newDrawDeck);
@@ -247,6 +310,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
             setEnemyDeck(enemyDecks);
           }
         }
+        setPendingPlus4Challenge(newPendingPlus4Challenge);
         
         if (newPlayerDecks && newPlayerDecks[currentUser.uid]) {
           const deck = newPlayerDecks[currentUser.uid];
@@ -316,8 +380,8 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
           if (state.winner === currentUser.uid) {
             setWinner('YOU WON');
           } else {
-            if (playerInfo[state.winner]?.name) {
-              setWinner(`${playerInfo[state.winner].name} WON`);
+            if (playerInfoRef.current[state.winner]?.name) {
+              setWinner(`${playerInfoRef.current[state.winner].name} WON`);
             } else {
               firestore().collection('users').doc(state.winner).get().then((userDoc) => {
                 if (userDoc.exists) {
@@ -340,7 +404,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
       matchUnsubscribe();
       gameUnsubscribe();
     };
-  }, [matchId, currentUser?.uid, playerInfo]);
+  }, [matchId, currentUser?.uid]);
 
   const syncGameState = (updates: any) => {
     if (!matchId || !currentUser?.uid) return;
@@ -379,6 +443,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
 
   const playerDrawOnline = () => {
     if (!playerTurn || isDrawing || choosingColor) return;
+    if (pendingPlus4Challenge?.active && pendingPlus4Challenge.targetPlayerId === currentUser?.uid) return;
 
     setIsDrawing(true);
     const newDrawDeck = [...drawDeck];
@@ -440,6 +505,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
 
   const playPlayerCardOnline = (card: Card) => {
     if (!playerTurn || isDrawing || choosingColor) return;
+    if (pendingPlus4Challenge?.active && pendingPlus4Challenge.targetPlayerId === currentUser?.uid) return;
     if (!actions.canPlay(card, tableDeck, playedCard, drewCard, isDrawing)) return;
 
     const cardIndex = playerDeck.findIndex(
@@ -476,17 +542,31 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
       let needsColorChoice = false;
       let cardsToDraw = 0;
       let targetPlayerId: string | null = null;
+      let nextPendingPlus4Challenge: PendingPlus4Challenge | null = null;
+      const previousCard = tableDeck[tableDeck.length - 1];
 
-      if (card.value === '+4' || card.value === 'change') {
+      if (isPlus4Card(card.value) || card.value === 'change') {
         needsColorChoice = true;
         setChoosingColor(true);
-        if (card.value === '+4') {
+        if (isPlus4Card(card.value)) {
           nextIndex = getNextPlayer(currentTurnIndex, newDirection);
+          targetPlayerId = players[nextIndex];
+          const hasPreviousColorCard = newPlayerDeck.some(
+            deckCard => deckCard.color !== 'black' && deckCard.color === previousCard?.color
+          );
+          nextPendingPlus4Challenge = {
+            active: true,
+            playedBy: currentUser?.uid || '',
+            targetPlayerId: targetPlayerId || '',
+            previousColor: previousCard?.color || '',
+            isBluff: hasPreviousColorCard,
+          };
+          setPendingPlus4Challenge(nextPendingPlus4Challenge);
         }
-      } else if (card.value === 'skip') {
+      } else if (card.value === 'skip' || card.value === 'block') {
         nextIndex = getNextPlayer(currentTurnIndex, newDirection);
         nextIndex = getNextPlayer(nextIndex, newDirection);
-      } else if (card.value === 'reverse') {
+      } else if (card.value === 'reverse' || card.value === 'invert') {
         newDirection = -newDirection;
         setTurnDirection(newDirection);
         if (players.length === 2) {
@@ -494,7 +574,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         } else {
           nextIndex = getNextPlayer(currentTurnIndex, newDirection);
         }
-      } else if (card.value === '+2') {
+      } else if (isPlus2Card(card.value)) {
         // Next player draws 2 cards and their turn is skipped
         nextIndex = getNextPlayer(currentTurnIndex, newDirection);
         targetPlayerId = players[nextIndex];
@@ -507,17 +587,17 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
 
       const nextPlayerId = players[nextIndex];
 
-      if (cardsToDraw > 0 && targetPlayerId && newDrawDeck.length >= cardsToDraw) {
-        const targetPlayerDeck = updatedPlayerDecks[targetPlayerId] || [];
-        const cardsToAdd: Card[] = [];
-        
-        for (let i = 0; i < cardsToDraw && newDrawDeck.length > 0; i++) {
-          const randomNum = Math.floor(Math.random() * newDrawDeck.length);
-          cardsToAdd.push(newDrawDeck[randomNum]);
-          newDrawDeck.splice(randomNum, 1);
-        }
-        
-        updatedPlayerDecks[targetPlayerId] = [...targetPlayerDeck, ...cardsToAdd];
+      if (cardsToDraw > 0 && targetPlayerId) {
+        const drawResult = drawCardsForTarget(
+          targetPlayerId,
+          cardsToDraw,
+          newDrawDeck,
+          updatedPlayerDecks,
+          newTableDeck
+        );
+        newDrawDeck.splice(0, newDrawDeck.length, ...drawResult.updatedDrawDeck);
+        Object.assign(updatedPlayerDecks, drawResult.updatedPlayerDecks);
+        newTableDeck.splice(0, newTableDeck.length, ...drawResult.updatedTableDeck);
       }
 
       setDrawDeck(newDrawDeck);
@@ -542,6 +622,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         turnDirection: newDirection,
         choosingColor: needsColorChoice,
         choosingColorPlayerId: needsColorChoice ? currentUser?.uid || '' : null,
+        pendingPlus4Challenge: nextPendingPlus4Challenge,
         lastPlayedCard: card,
       });
     }, 500);
@@ -609,7 +690,7 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     const newTableDeck = [...tableDeck];
     if (newTableDeck.length > 0) {
       const lastCard = {...newTableDeck[newTableDeck.length - 1]};
-      const wasPlus4 = lastCard.value === '+4';
+      const wasPlus4 = isPlus4Card(lastCard.value);
       lastCard.color = color;
       newTableDeck[newTableDeck.length - 1] = lastCard;
 
@@ -622,22 +703,10 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
       const updatedPlayerDecks = {...playerDecks};
       let updatedDrawDeck = [...drawDeck];
       
-      if (wasPlus4 && updatedDrawDeck.length >= 4) {
-        const targetPlayerDeck = updatedPlayerDecks[finalNextPlayerId] || [];
-        const cardsToAdd: Card[] = [];
-        
-        for (let i = 0; i < 4 && updatedDrawDeck.length > 0; i++) {
-          const randomNum = Math.floor(Math.random() * updatedDrawDeck.length);
-          cardsToAdd.push(updatedDrawDeck[randomNum]);
-          updatedDrawDeck.splice(randomNum, 1);
-        }
-        
-        updatedPlayerDecks[finalNextPlayerId] = [...targetPlayerDeck, ...cardsToAdd];
-        finalNextIndex = getNextPlayer(finalNextIndex, turnDirection);
-        finalNextPlayerId = players[finalNextIndex];
-        
-        setDrawDeck(updatedDrawDeck);
-        setPlayerDecks(updatedPlayerDecks);
+      if (wasPlus4 && pendingPlus4Challenge?.active) {
+        // Wait for target player's bluff decision first.
+        finalNextPlayerId = pendingPlus4Challenge.targetPlayerId;
+        finalNextIndex = getPlayerIndexById(finalNextPlayerId);
       }
       
       setPlayerTurn(false);
@@ -651,8 +720,84 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
         choosingColorPlayerId: null,
         currentTurn: finalNextPlayerId,
         currentTurnIndex: finalNextIndex,
+        pendingPlus4Challenge,
       });
     }
+  };
+
+  const resolvePlus4ChallengeOnline = (challenge: boolean) => {
+    if (!pendingPlus4Challenge?.active || !currentUser?.uid || !matchId) return;
+    if (pendingPlus4Challenge.targetPlayerId !== currentUser.uid) return;
+
+    let updatedDrawDeck = [...drawDeck];
+    const updatedPlayerDecks = {...playerDecks};
+    const updatedTableDeck = [...tableDeck];
+
+    const currentTargetId = pendingPlus4Challenge.targetPlayerId;
+    const playedById = pendingPlus4Challenge.playedBy;
+
+    let nextTurnPlayerId = currentTargetId;
+    let nextTurnIndex = getPlayerIndexById(currentTargetId);
+
+    if (!challenge) {
+      const drawResult = drawCardsForTarget(
+        currentTargetId,
+        4,
+        updatedDrawDeck,
+        updatedPlayerDecks,
+        updatedTableDeck
+      );
+      updatedDrawDeck = drawResult.updatedDrawDeck;
+      Object.assign(updatedPlayerDecks, drawResult.updatedPlayerDecks);
+      updatedTableDeck.splice(0, updatedTableDeck.length, ...drawResult.updatedTableDeck);
+
+      nextTurnIndex = getNextPlayer(getPlayerIndexById(currentTargetId), turnDirection);
+      nextTurnPlayerId = players[nextTurnIndex];
+    } else if (pendingPlus4Challenge.isBluff) {
+      const drawResult = drawCardsForTarget(
+        playedById,
+        4,
+        updatedDrawDeck,
+        updatedPlayerDecks,
+        updatedTableDeck
+      );
+      updatedDrawDeck = drawResult.updatedDrawDeck;
+      Object.assign(updatedPlayerDecks, drawResult.updatedPlayerDecks);
+      updatedTableDeck.splice(0, updatedTableDeck.length, ...drawResult.updatedTableDeck);
+      // Bluff was true, challenger takes normal turn.
+      nextTurnIndex = getPlayerIndexById(currentTargetId);
+      nextTurnPlayerId = currentTargetId;
+    } else {
+      const drawResult = drawCardsForTarget(
+        currentTargetId,
+        6,
+        updatedDrawDeck,
+        updatedPlayerDecks,
+        updatedTableDeck
+      );
+      updatedDrawDeck = drawResult.updatedDrawDeck;
+      Object.assign(updatedPlayerDecks, drawResult.updatedPlayerDecks);
+      updatedTableDeck.splice(0, updatedTableDeck.length, ...drawResult.updatedTableDeck);
+      // Failed challenge -> target is skipped.
+      nextTurnIndex = getNextPlayer(getPlayerIndexById(currentTargetId), turnDirection);
+      nextTurnPlayerId = players[nextTurnIndex];
+    }
+
+    setDrawDeck(updatedDrawDeck);
+    setPlayerDecks(updatedPlayerDecks);
+    setTableDeck(updatedTableDeck);
+    setPendingPlus4Challenge(null);
+    setCurrentTurnIndex(nextTurnIndex);
+    setPlayerTurn(nextTurnPlayerId === currentUser.uid);
+
+    syncGameState({
+      drawDeck: updatedDrawDeck,
+      playerDecks: updatedPlayerDecks,
+      tableDeck: updatedTableDeck,
+      currentTurn: nextTurnPlayerId,
+      currentTurnIndex: nextTurnIndex,
+      pendingPlus4Challenge: null,
+    });
   };
 
   useEffect(() => {
@@ -708,7 +853,12 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     Object.keys(playerDecks).forEach((playerId) => {
       if (playerId !== currentUser?.uid) {
         const playerDeckCount = playerDecks[playerId]?.length || 0;
-        const playerHadCards = playerDeckCount > 0;
+        const playerHadCards = opponentHadCardsRef.current[playerId] || false;
+
+        if (playerDeckCount > 0) {
+          opponentHadCardsRef.current[playerId] = true;
+          return;
+        }
         
         if (playerDeckCount === 0 && tableDeck.length > 0 && playerHadCards) {
           if (playerInfo[playerId]?.name) {
@@ -756,6 +906,9 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     playerDecks?: {[playerId: string]: Card[]};
     playerInfo?: {[playerId: string]: {name: string; email: string}};
     currentTurn?: string;
+    localPlayerId?: string;
+    pendingPlus4Challenge?: PendingPlus4Challenge | null;
+    resolvePlus4Challenge?: (challenge: boolean) => void;
   } = {
     drawDeck,
     setDrawDeck,
@@ -781,6 +934,9 @@ export const OnlineCardsProvider = ({children, matchId, opponentId}: Props) => {
     playerDecks,
     playerInfo,
     currentTurn: players[currentTurnIndex] || undefined,
+    localPlayerId: currentUser?.uid,
+    pendingPlus4Challenge,
+    resolvePlus4Challenge: resolvePlus4ChallengeOnline,
     finishGame: finishGameOnline,
   };
 

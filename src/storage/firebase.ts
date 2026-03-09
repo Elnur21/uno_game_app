@@ -3,6 +3,8 @@ import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
 import {removeData} from './local';
 
+const MAX_MATCH_PLAYERS = 10;
+
 export const getUserByEmail = async (email: string) => {
   try {
     const currentUser = auth().currentUser;
@@ -286,6 +288,7 @@ export const createMatch = async (player1Id: string, player2Identifier: string, 
     const matchRef = await firestore().collection('matches').add({
       players: [player1Id, player2Id],
       hostId: player1Id, // Host can add more players
+      maxPlayers: MAX_MATCH_PLAYERS,
       status: 'pending',
       createdAt: firestore.FieldValue.serverTimestamp(),
       currentTurn: player1Id, // Host starts
@@ -350,6 +353,10 @@ export const addPlayerToMatch = async (matchId: string, playerIdentifier: string
     // Check if player is already in the match
     if (players.includes(playerId)) {
       throw new Error('Player already in match');
+    }
+
+    if (players.length >= MAX_MATCH_PLAYERS) {
+      throw new Error('Match is full');
     }
 
     // Add player to match

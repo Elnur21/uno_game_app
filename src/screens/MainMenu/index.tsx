@@ -16,7 +16,7 @@ export function MainMenu({navigation}: MainMenuProps) {
     navigation.navigate('TurnirsScreen');
   }
   function startOfflineGame() {
-    navigation.navigate('OfflineGameScreen');
+    navigation.navigate('OfflineSetupScreen');
   }
   function openProfile() {
     navigation.navigate('ProfileScreen');

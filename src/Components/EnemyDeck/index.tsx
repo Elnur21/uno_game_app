@@ -16,37 +16,38 @@ export function EnemyDeck() {
   const playerTurn = cardsContext?.playerTurn;
   const currentUser = auth().currentUser;
 
-  if (onlineContext && (onlineContext as any).players && (onlineContext as any).playerDecks) {
-    const players = (onlineContext as any).players as string[];
-    const playerDecks = (onlineContext as any).playerDecks as {[playerId: string]: any[]};
-    const playerInfo = (onlineContext as any).playerInfo as {[playerId: string]: {name: string}};
-    const currentTurn = (onlineContext as any).currentTurn as string;
-    
-    const enemyPlayers = players.filter((id: string) => id !== currentUser?.uid);
+  if ((cardsContext as any)?.players && (cardsContext as any)?.playerDecks) {
+    const players = (cardsContext as any).players as string[];
+    const playerDecks = (cardsContext as any).playerDecks as {[playerId: string]: any[]};
+    const playerInfo = (cardsContext as any).playerInfo as {[playerId: string]: {name: string}};
+    const currentTurn = (cardsContext as any).currentTurn as string;
+    const localPlayerId = onlineContext
+      ? currentUser?.uid
+      : (cardsContext as any).localPlayerId || 'player';
+    const enemyPlayers = players.filter((id: string) => id !== localPlayerId);
+    const maxTopSlots = 8;
+    const topPlayers = enemyPlayers.slice(0, maxTopSlots);
 
     return (
       <View style={styles.multiPlayerContainer}>
-        {enemyPlayers.map((playerId: string) => {
-          const playerDeck = playerDecks[playerId] || [];
-          const playerName = playerInfo?.[playerId]?.name || 'Player';
-          const isTheirTurn = currentTurn === playerId;
-          
-          return (
-            <View key={playerId} style={styles.playerSection}>
-              <Text style={styles.playerName}>{playerName} ({playerDeck.length})</Text>
-              <View style={[styles.container, { opacity: isTheirTurn ? 1 : 0.5 }]}>
-                {playerDeck.slice(0, 4).map((card: any, index: number) => (
-                  <View key={index} style={{ opacity: playerTurn ? 0.2 : 1 }}>
-                    <CardBack />
-                  </View>
-                ))}
-                {playerDeck.length > 4 && (
-                  <Text style={styles.moreCardsText}>+{playerDeck.length - 4}</Text>
-                )}
+        <View style={styles.topSlotsContainer}>
+          {topPlayers.map((playerId: string) => {
+            const playerName = playerInfo?.[playerId]?.name || 'Player';
+            const isTheirTurn = currentTurn === playerId;
+            const cardCount = playerDecks?.[playerId]?.length || 0;
+            
+            return (
+              <View key={playerId} style={[styles.playerSlot, isTheirTurn && styles.playerSlotActive]}>
+                <Text numberOfLines={1} style={[styles.playerName, isTheirTurn && styles.playerNameActive]}>
+                  {playerName}
+                </Text>
+                <View style={styles.countBadge}>
+                  <Text style={styles.countBadgeText}>{cardCount}</Text>
+                </View>
               </View>
-            </View>
-          );
-        })}
+            );
+          })}
+        </View>
       </View>
     );
   }

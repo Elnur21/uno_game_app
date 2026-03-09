@@ -170,6 +170,8 @@ export function FindPlayersScreen({navigation}: FindPlayersScreenProps) {
     } catch (error: any) {
       if (error.message === 'Match already exists' || error.message === 'Player already in match') {
         Alert.alert('Already in Game', 'This player is already in the game.');
+      } else if (error.message === 'Match is full') {
+        Alert.alert('Game is Full', 'This game already has the maximum of 10 players.');
       } else {
         Alert.alert('Error', 'Failed to send invitation. Please try again.');
       }

@@ -1,6 +1,7 @@
 import { CardsProvider } from '../../Contexts/CardsContext';
 import { Table } from '../../Components/Table';
 import { OfflineGameScreenNavigationProp } from '../../types/navigationProps';
+import {useRoute} from '@react-navigation/native';
 import { useEffect } from 'react';
 import { Alert } from 'react-native';
 
@@ -8,7 +9,14 @@ interface GameScreenProps {
   navigation: OfflineGameScreenNavigationProp;
 }
 
+interface RouteParams {
+  botCount?: number;
+}
+
 export function OfflineGameScreen({ navigation }: GameScreenProps) {
+  const route = useRoute();
+  const {botCount = 1}: RouteParams = route.params || {};
+
   // Handle all navigation exits (back button, gestures, programmatic navigation)
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
@@ -48,7 +56,7 @@ export function OfflineGameScreen({ navigation }: GameScreenProps) {
   }, [navigation]);
 
   return (
-    <CardsProvider>
+    <CardsProvider botCount={botCount}>
       <Table navigation={navigation} />
     </CardsProvider>
   );

@@ -332,7 +332,8 @@ export function shuffleDrawDeck(
     setPlayerDeck: SetDeck,
     setEnemyDeck: SetDeck,
     setTableDeck: SetDeck,
-    setPlayerTurn: SetBool
+    setPlayerTurn: SetBool,
+    botCount: number = 1
 ) {
     isEnemyPlaying = false;
     isPlayerChoosing = false;
@@ -348,7 +349,7 @@ export function shuffleDrawDeck(
     }
 
     setDrawDeck(updatedDrawDeck);
-    givePlayerCards(updatedDrawDeck, setDrawDeck, setPlayerDeck, setEnemyDeck);
+    givePlayerCards(updatedDrawDeck, setDrawDeck, setPlayerDeck, setEnemyDeck, botCount);
     setTableDeck([]);
     setPlayerTurn(true);
 }
@@ -417,7 +418,8 @@ export function shuffleDrawDeckForMultiplayer(playerIds: string[]) {
         allCards.splice(randomNum, 1);
     }
 
-    for (let cardIndex = 0; cardIndex < 7; cardIndex++) {
+    const handSize = getInitialHandSize(drawDeck.length, playerIds.length);
+    for (let cardIndex = 0; cardIndex < handSize; cardIndex++) {
         playerIds.forEach(playerId => {
             if (drawDeck.length > 0) {
                 const randomNum = Math.floor(Math.random() * drawDeck.length);
@@ -437,26 +439,49 @@ export function shuffleDrawDeckForMultiplayer(playerIds: string[]) {
         drawDeck,
         playerDecks,
         tableDeck,
+        handSize,
     };
 }
 
-export function givePlayerCards(updatedDrawDeck: Card[], setDrawDeck: SetDeck, setPlayerDeck: SetDeck, setEnemyDeck: SetDeck) {
-    let updatedPlayerDeck: Card[] = [];
+function getInitialHandSize(totalCardsInDeck: number, playerCount: number) {
+    if (playerCount <= 0) return 1;
+    // Keep at least one card for table and ensure every participant can be dealt cards.
+    return Math.max(1, Math.floor((totalCardsInDeck - 1) / playerCount));
+}
 
-    for (let i = 0; i < 7; i++) {
+export function givePlayerCards(
+    updatedDrawDeck: Card[],
+    setDrawDeck: SetDeck,
+    setPlayerDeck: SetDeck,
+    setEnemyDeck: SetDeck,
+    botCount: number = 1
+) {
+    let updatedPlayerDeck: Card[] = [];
+    const totalPlayers = Math.max(2, botCount + 1);
+    const handSize = getInitialHandSize(updatedDrawDeck.length, totalPlayers);
+
+    for (let i = 0; i < handSize; i++) {
         const randomNum = Math.floor(Math.random() * updatedDrawDeck.length);
         updatedPlayerDeck.push(updatedDrawDeck[randomNum]);
         updatedDrawDeck.splice(randomNum, 1);
     }
 
     setPlayerDeck(updatedPlayerDeck);
-    giveEnemyCards(updatedDrawDeck, setDrawDeck, setEnemyDeck);
+    giveEnemyCards(updatedDrawDeck, setDrawDeck, setEnemyDeck, botCount, handSize);
 }
 
-export function giveEnemyCards(updatedDrawDeck: Card[], setDrawDeck: SetDeck, setEnemyDeck: SetDeck) {
+export function giveEnemyCards(
+    updatedDrawDeck: Card[],
+    setDrawDeck: SetDeck,
+    setEnemyDeck: SetDeck,
+    botCount: number = 1,
+    handSize: number = 7
+) {
     let updatedEnemyDeck: Card[] = [];
+    const clampedBots = Math.max(1, Math.min(9, botCount));
+    const enemyCardsToDeal = handSize * clampedBots;
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < enemyCardsToDeal && updatedDrawDeck.length > 0; i++) {
         const randomNum = Math.floor(Math.random() * updatedDrawDeck.length);
         updatedEnemyDeck.push(updatedDrawDeck[randomNum]);
         updatedDrawDeck.splice(randomNum, 1);

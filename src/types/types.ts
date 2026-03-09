@@ -1,6 +1,7 @@
 export type RootStackParamList = {
   MainMenu: undefined;
-  OfflineGameScreen: undefined;
+  OfflineSetupScreen: undefined;
+  OfflineGameScreen: {botCount?: number} | undefined;
   OnlineGameScreen: {matchId?: string; opponent?: User};
   GameRoomScreen: {matchId: string};
   AuthScreen: undefined;

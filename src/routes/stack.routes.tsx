@@ -18,6 +18,7 @@ import {ProfileScreen} from '../screens/ProfileScreen';
 import {ChatsScreen} from '../screens/ChatsScreen';
 import {FindPlayersScreen} from '../screens/FindPlayersScreen';
 import {GameRoomScreen} from '../screens/GameRoomScreen';
+import {OfflineSetupScreen} from '../screens/OfflineSetupScreen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const {Navigator, Screen} = createStackNavigator();
@@ -51,6 +52,17 @@ export default function Stack() {
         },
       }}>
       <Screen name="MainMenu" component={MainMenu} />
+      <Screen
+        options={({navigation}) => ({
+          headerLeft: () => (
+            <Pressable onPress={() => navigation.goBack()}>
+              <FontAwesome name="arrow-left" style={{marginLeft:10}} size={24} color="white" />
+            </Pressable>
+          ),
+        })}
+        name="OfflineSetupScreen"
+        component={OfflineSetupScreen}
+      />
       <Screen
         options={({navigation}) => ({
           headerLeft: () => (
