@@ -1,5 +1,6 @@
 # OSX
 #
+google-services.json
 .DS_Store
 .env
 config.ts
